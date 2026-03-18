@@ -227,13 +227,9 @@ export function useMovement(
       if (Date.now() - pointerDownTime > 200) return
 
       // Convertit la position du clic en coordonnées grille
+      // screenToIso gère déjà le centrage vertical (-TILE_H/2) en interne
       const localPos = world.toLocal({ x: e.globalX, y: e.globalY })
-
-      // Ajuste pour le centre de la tile (pied)
-      const adjustedX = localPos.x
-      const adjustedY = localPos.y - TILE_H / 2
-
-      const gridPos = screenToIso(adjustedX, adjustedY)
+      const gridPos = screenToIso(localPos.x, localPos.y)
 
       if (!isInBounds(gridPos.x, gridPos.y)) return
 
