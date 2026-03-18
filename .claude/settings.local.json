@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(git -C /Users/danbi/Desktop/punk-city status)"
-    ]
-  }
-}
