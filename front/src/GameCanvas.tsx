@@ -229,14 +229,19 @@ function InnerGame({
   playerGfx: Graphics
   config:    GameConfig
 }) {
+  // Ref vers le callback de position — permet de l'appeler depuis useChat sans stale closure
+  const onPlayerMovedCbRef = useRef<(data: any) => void>(() => {})
+
   const {
     messages, players, connected, myPlayer,
     sendMessage, sendEmote, reportMove, changeRoom,
   } = useChat({
-    serverUrl: config.serverUrl,
-    username:  config.username,
-    avatar:    config.avatar,
-    roomId:    config.roomId,
+    serverUrl:     config.serverUrl,
+    username:      config.username,
+    avatar:        config.avatar,
+    roomId:        config.roomId,
+    // Bypass React state pour les updates de position à 60fps → plus de téléportation
+    onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
   })
 
   const onRoomChange = useCallback((roomId: string, spawnX: number, spawnY: number) => {
@@ -311,6 +316,34 @@ function InnerGame({
   // ── Autres joueurs ───────────────────────
   const otherSprites = useRef<Map<string, any>>(new Map())
 
+  // ── Callback direct pour les positions (bypass React, 60fps) ──
+  // Branché ici pour avoir accès à otherSprites
+  useEffect(() => {
+    onPlayerMovedCbRef.current = (data: any) => {
+      const container = otherSprites.current.get(data.id)
+      if (!container || !container._walkGif) return
+
+      container._targetX      = data.pixiX
+      container._targetY      = data.pixiY
+      container._lastMoveTime = Date.now()
+      container._currentDir   = data.direction || 'sw'
+
+      const dir = data.direction || 'sw'
+      container._walkGif.visible  = false
+      container._idleSw.visible   = false
+      container._spriteSe.visible = false
+      container._spriteNw.visible = false
+      container._spriteNe.visible = false
+
+      if (dir === 'sw') {
+        container._walkGif.visible = true
+        if (!container._walkGif.playing) container._walkGif.play()
+      } else if (dir === 'se') { container._spriteSe.visible = true }
+      else if (dir === 'nw')   { container._spriteNw.visible = true }
+      else if (dir === 'ne')   { container._spriteNe.visible = true }
+    }
+  }, [])
+
   useEffect(() => {
     if (!myPlayer) return
 
@@ -362,6 +395,19 @@ function InnerGame({
             s.on('pointerdown', onClick)
           })
 
+          // Position initiale depuis la dernière position connue du joueur
+          const initX = (p as any).pixiX || isoToScreen(p.gridX, p.gridY).x
+          const initY = (p as any).pixiY || isoToScreen(p.gridX, p.gridY).y
+          walkGif.x  = initX; walkGif.y  = initY
+          idleSw.x   = initX; idleSw.y   = initY
+          spriteSe.x = initX; spriteSe.y = initY
+          spriteNw.x = initX; spriteNw.y = initY
+          spriteNe.x = initX; spriteNe.y = initY
+
+          // Idle par défaut (idleSw visible, walkGif caché)
+          walkGif.visible = false
+          idleSw.visible  = true
+
           // Stocke tout dans un objet conteneur
           const container = {
             x: 0, y: 0,
@@ -371,40 +417,16 @@ function InnerGame({
             _spriteNw: spriteNw,
             _spriteNe: spriteNe,
             _currentDir: 'sw',
-            _targetX: 0,
-            _targetY: 0,
+            _targetX: initX,
+            _targetY: initY,
           }
           otherSprites.current.set(p.id, container)
         })
         return
       }
 
-      const container = otherSprites.current.get(p.id)
-      if (!container || !container._walkGif) return
-
-      const tx = (p as any).pixiX ?? isoToScreen(p.gridX, p.gridY).x
-      const ty = (p as any).pixiY ?? isoToScreen(p.gridX, p.gridY).y
-      container._targetX = tx
-      container._targetY = ty
-
-      const dir = (p as any).direction || 'sw'
-      // Marque le joueur comme en mouvement — le ticker s'occupe de stopper l'anim après inactivité
-      container._lastMoveTime = Date.now()
-      container._currentDir   = dir
-
-      // Met à jour direction immédiatement
-      container._walkGif.visible  = false
-      container._idleSw.visible   = false
-      container._spriteSe.visible = false
-      container._spriteNw.visible = false
-      container._spriteNe.visible = false
-
-      if (dir === 'sw') {
-        container._walkGif.visible = true
-        if (!container._walkGif.playing) container._walkGif.play()
-      } else if (dir === 'se') { container._spriteSe.visible = true }
-      else if (dir === 'nw')   { container._spriteNw.visible = true }
-      else if (dir === 'ne')   { container._spriteNe.visible = true }
+      // Position et animation gérées par le callback onPlayerMoved (bypass React, 60fps)
+      // Ce useEffect ne sert plus qu'au spawn/despawn des sprites
     })
 
     otherSprites.current.forEach((container, id) => {

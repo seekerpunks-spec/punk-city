@@ -54,6 +54,8 @@ interface UseChatOptions {
   roomId:    string
   gridX?:    number
   gridY?:    number
+  // Callback direct (bypass React state) pour les updates de position à 60fps
+  onPlayerMoved?: (data: { id: string; gridX: number; gridY: number; pixiX: number; pixiY: number; direction: string }) => void
 }
 
 // ─────────────────────────────────────────
@@ -66,6 +68,10 @@ export function useChat(options: UseChatOptions) {
   const [players,  setPlayers]    = useState<Player[]>([])
   const [connected, setConnected] = useState(false)
   const [myPlayer,  setMyPlayer]  = useState<Player | null>(null)
+
+  // Ref stable vers le callback — se met à jour sans recréer la connexion socket
+  const onPlayerMovedRef = useRef(options.onPlayerMoved)
+  useEffect(() => { onPlayerMovedRef.current = options.onPlayerMoved }, [options.onPlayerMoved])
 
   // ── Connexion ──────────────────────────
   useEffect(() => {
@@ -126,6 +132,9 @@ export function useChat(options: UseChatOptions) {
       pixiY:     number
       direction: string
     }) => {
+      // Callback direct vers le game loop PixiJS — bypass React pour éviter la téléportation
+      onPlayerMovedRef.current?.(data)
+      // Met quand même à jour le state React pour gridX/gridY/direction (ChatPanel, etc.)
       setPlayers(prev => prev.map(p =>
         p.id === data.id ? {
           ...p,
