@@ -67,10 +67,11 @@ function isInBounds(x: number, y: number): boolean {
   return x >= 0 && y >= 0 && x < GRID_COLS && y < GRID_ROWS
 }
 
-// Centre pixel d'une tile (pied du personnage)
+// Point pied du personnage : bas du losange de la tile (y + TILE_H)
+// anchor(0.5, 1) → le bas du sprite se pose exactement sur le sol iso
 function tileCenterPixel(gridX: number, gridY: number): PixelPos {
   const { x, y } = isoToScreen(gridX, gridY)
-  return { x, y: y + TILE_H / 2 }
+  return { x, y: y + TILE_H }
 }
 
 // ─────────────────────────────────────────
