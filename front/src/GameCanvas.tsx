@@ -986,6 +986,7 @@ function InnerGame({
         unreadPMs={unreadPMs}
         onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
         onMyApartment={() => loadRoom(`apartment_${config.username}`)}
+        onSelectPlayer={p => setSelectedPlayer(p)}
       />
 
       {/* Messages flottants pour chaque joueur */}
@@ -1054,7 +1055,9 @@ function InnerGame({
           onTrade={id => { sendTradeRequest(id); setSelectedPlayer(null) }}
           onVisitApartment={username => { loadRoom(`apartment_${username}`); setSelectedPlayer(null) }}
           isOwnerInApartment={
-            players.find(p => p.id === selectedPlayer.id)?.roomId === `apartment_${selectedPlayer.username}`
+            // Cherche d'abord dans players (même room), puis dans friends (rooms différentes)
+            (players.find(p => p.id === selectedPlayer.id)?.roomId ??
+             friends.find(f => f.id === selectedPlayer.id)?.roomId) === `apartment_${selectedPlayer.username}`
           }
         />
       )}

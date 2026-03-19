@@ -605,6 +605,7 @@ interface SocialPanelProps {
   players:         Player[]
   myPlayerId:      string
   friends:         { id: string; username: string; online: boolean; roomId: string }[]
+  onSelectPlayer?: (player: { id: string; username: string }) => void
   pmConversations: Map<string, PMMsg[]>
   unreadPMs:       Map<string, number>
   onOpenPM:        (target: { id: string; username: string }) => void
@@ -612,7 +613,7 @@ interface SocialPanelProps {
 }
 
 export function SocialPanel({
-  players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment,
+  players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment, onSelectPlayer,
 }: SocialPanelProps) {
   const [tab, setTab] = useState<'online' | 'friends' | 'messages'>('online')
 
@@ -744,12 +745,15 @@ export function SocialPanel({
             : friends.map(f => {
                 const roomName = ROOMS.find(r => r.id === f.roomId)?.name ?? f.roomId
                 return (
-                  <div key={f.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '5px 8px', borderRadius: 7,
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}>
+                  <div key={f.id}
+                    onClick={() => onSelectPlayer?.({ id: f.id, username: f.username })}
+                    style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '5px 8px', borderRadius: 7,
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.06)',
+                      cursor: 'pointer',
+                    }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       <div style={{
                         width: 26, height: 26, borderRadius: '50%',
