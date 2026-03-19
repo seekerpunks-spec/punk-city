@@ -211,6 +211,40 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
 }
 
 // ─────────────────────────────────────────
+// CONFIG APPARTEMENTS (générée dynamiquement)
+// ─────────────────────────────────────────
+
+function getApartmentConfig(roomId: string): RoomConfig | undefined {
+  if (!roomId.startsWith('apartment_')) return undefined
+  const username = roomId.slice('apartment_'.length)
+  return {
+    id:          roomId,
+    name:        `${username}'s Apartment`,
+    description: 'A private apartment. Home sweet home.',
+    cols:        16,
+    rows:        16,
+    ambientColor: 0x0a0a18,
+    theme: {
+      floorA:    0x1a1a2e,
+      floorB:    0x16213e,
+      wallLeft:  0x0f3460,
+      wallRight: 0x0a2647,
+      accent:    0xB421F3,
+      depth:     10,
+    },
+    doors: [
+      { x: 0, y: 8, targetRoom: 'genesis-plaza', targetX: 1, targetY: 12, label: '← Leave' },
+    ],
+    tiles: [
+      ...Array.from({ length: 16 }, (_, i) => ({ x: i, y: 0,  type: 'wall' as const })),
+      ...Array.from({ length: 16 }, (_, i) => ({ x: i, y: 15, type: 'wall' as const })),
+      ...Array.from({ length: 16 }, (_, i) => ({ x: 0,  y: i, type: 'wall' as const })),
+      ...Array.from({ length: 16 }, (_, i) => ({ x: 15, y: i, type: 'wall' as const })),
+    ],
+  }
+}
+
+// ─────────────────────────────────────────
 // UTILITAIRES ISO
 // ─────────────────────────────────────────
 
@@ -257,7 +291,7 @@ export function useRoomSystem(
   const loadRoom = useCallback(async (roomId: string, spawnX?: number, spawnY?: number) => {
     if (!app || !world || transitioning) return
 
-    const config = ROOMS_CONFIG[roomId]
+    const config = ROOMS_CONFIG[roomId] ?? getApartmentConfig(roomId)
     if (!config) { console.error(`[Room] Room inconnue : ${roomId}`); return }
 
     setTransitioning(true)
@@ -302,7 +336,7 @@ export function useRoomSystem(
 
   // ── Check portes (appelé à chaque déplacement) ──
   const checkDoors = useCallback((gridX: number, gridY: number) => {
-    const config = ROOMS_CONFIG[activeRoomId]
+    const config = ROOMS_CONFIG[activeRoomId] ?? getApartmentConfig(activeRoomId)
     if (!config) return
 
     const door = config.doors.find(d => d.x === gridX && d.y === gridY)
@@ -318,7 +352,7 @@ export function useRoomSystem(
 
   return {
     activeRoomId,
-    activeRoom:   ROOMS_CONFIG[activeRoomId],
+    activeRoom:   ROOMS_CONFIG[activeRoomId] ?? getApartmentConfig(activeRoomId),
     transitioning,
     blockedTiles,
     loadRoom,

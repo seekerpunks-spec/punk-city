@@ -36,7 +36,20 @@ interface Room {
   history: ChatMessage[]
 }
 
-const players = new Map<string, Player>()
+interface Trade {
+  id:         string
+  playerAId:  string  // requester
+  playerBId:  string  // accepter
+  offerA:     string
+  offerB:     string
+  confirmedA: boolean
+  confirmedB: boolean
+}
+
+const players               = new Map<string, Player>()
+const friendships           = new Map<string, Set<string>>()  // socketId → Set<friendId>
+const pendingFriendRequests = new Map<string, Set<string>>()  // targetId → Set<requesterId>
+const activeTrades          = new Map<string, Trade>()        // tradeId → Trade
 
 const rooms = new Map<string, Room>([
   ['genesis-plaza',    { id: 'genesis-plaza',    name: 'Genesis Plaza',    players: new Map(), history: [] }],
@@ -96,6 +109,17 @@ io.on('connection', (socket: Socket) => {
     room.players.set(socket.id, player)
     socket.join(roomId)
 
+    // Crée l'appartement du joueur s'il n'existe pas encore
+    const aptRoomId = `apartment_${player.username}`
+    if (!rooms.has(aptRoomId)) {
+      rooms.set(aptRoomId, {
+        id:      aptRoomId,
+        name:    `${player.username}'s Apartment`,
+        players: new Map(),
+        history: [],
+      })
+    }
+
     socket.emit('player:joined', {
       player,
       players: getPlayersInRoom(roomId),
@@ -128,6 +152,19 @@ io.on('connection', (socket: Socket) => {
     if (!room) return
     addToHistory(room, msg)
     io.to(player.roomId).emit('chat:message', msg)
+  })
+
+  socket.on('pm:send', (data: { targetId: string; text: string }) => {
+    const sender = players.get(socket.id)
+    if (!sender) return
+    const text = data.text?.trim().slice(0, 200)
+    if (!text) return
+    io.to(data.targetId).emit('pm:receive', {
+      fromId:       socket.id,
+      fromUsername: sender.username,
+      text,
+      timestamp:    Date.now(),
+    })
   })
 
   socket.on('chat:emote', (data: { text: string }) => {
@@ -166,8 +203,22 @@ io.on('connection', (socket: Socket) => {
     const player  = players.get(socket.id)
     if (!player) return
     const oldRoom = rooms.get(player.roomId)
-    const newRoom = rooms.get(data.roomId)
-    if (!newRoom) return socket.emit('error', { message: 'Room not found' })
+    let   newRoom = rooms.get(data.roomId)
+    if (!newRoom) {
+      // Crée la room d'appartement à la demande
+      if (data.roomId.startsWith('apartment_')) {
+        const ownerUsername = data.roomId.slice('apartment_'.length)
+        rooms.set(data.roomId, {
+          id:      data.roomId,
+          name:    `${ownerUsername}'s Apartment`,
+          players: new Map(),
+          history: [],
+        })
+        newRoom = rooms.get(data.roomId)!
+      } else {
+        return socket.emit('error', { message: 'Room not found' })
+      }
+    }
 
     if (oldRoom) {
       oldRoom.players.delete(socket.id)
@@ -188,6 +239,10 @@ io.on('connection', (socket: Socket) => {
     socket.emit('player:joined', { player, players: getPlayersInRoom(data.roomId), history: newRoom.history })
     socket.to(data.roomId).emit('player:entered', player)
 
+    friendships.get(socket.id)?.forEach(friendId => {
+      io.to(friendId).emit('friend:status', { id: socket.id, roomId: data.roomId })
+    })
+
     const joinMsg: ChatMessage = {
       id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
       text: `${player.username} arrived from ${oldRoom?.name ?? '???'}`,
@@ -195,6 +250,165 @@ io.on('connection', (socket: Socket) => {
     }
     addToHistory(newRoom, joinMsg)
     io.to(data.roomId).emit('chat:message', joinMsg)
+  })
+
+  socket.on('friend:request', (data: { targetId: string }) => {
+    console.log(`[friend:request] from=${socket.id} to=${data.targetId} knownPlayers=${[...players.keys()].join(',')}`)
+    const sender = players.get(socket.id)
+    const target = players.get(data.targetId)
+    if (!sender || !target) { console.log(`[friend:request] FAIL sender=${!!sender} target=${!!target}`); return }
+    if (socket.id === data.targetId) return
+
+    if (!pendingFriendRequests.has(data.targetId)) {
+      pendingFriendRequests.set(data.targetId, new Set())
+    }
+    pendingFriendRequests.get(data.targetId)!.add(socket.id)
+
+    io.to(data.targetId).emit('friend:request_received', {
+      fromId:       socket.id,
+      fromUsername: sender.username,
+    })
+    console.log(`[friend] ${sender.username} → ${target.username}`)
+  })
+
+  socket.on('friend:accept', (data: { requesterId: string }) => {
+    const accepter  = players.get(socket.id)
+    const requester = players.get(data.requesterId)
+    if (!accepter || !requester) return
+
+    const pending = pendingFriendRequests.get(socket.id)
+    if (!pending?.has(data.requesterId)) return
+    pending.delete(data.requesterId)
+
+    if (!friendships.has(socket.id))       friendships.set(socket.id, new Set())
+    if (!friendships.has(data.requesterId)) friendships.set(data.requesterId, new Set())
+    friendships.get(socket.id)!.add(data.requesterId)
+    friendships.get(data.requesterId)!.add(socket.id)
+
+    // Notifie le demandeur (B) que A a accepté
+    io.to(data.requesterId).emit('friend:accepted', {
+      byId:       socket.id,
+      byUsername: accepter.username,
+      byRoomId:   accepter.roomId,
+    })
+    // Notifie l'accepteur (A) — ajoute B à sa liste d'amis
+    socket.emit('friend:added', {
+      id:       data.requesterId,
+      username: requester.username,
+      roomId:   requester.roomId,
+    })
+    console.log(`[friend] ${accepter.username} accepted ${requester.username}`)
+  })
+
+  socket.on('friend:decline', (data: { requesterId: string }) => {
+    const pending = pendingFriendRequests.get(socket.id)
+    if (pending) pending.delete(data.requesterId)
+
+    io.to(data.requesterId).emit('friend:declined', {
+      byId:       socket.id,
+      byUsername: players.get(socket.id)?.username ?? '???',
+    })
+  })
+
+  // ── Trade ────────────────────────────────
+  // ── Invitation Appartement ───────────────
+  socket.on('apartment:invite', () => {
+    const player = players.get(socket.id)
+    if (!player) return
+    if (player.roomId !== `apartment_${player.username}`) return
+
+    friendships.get(socket.id)?.forEach(friendId => {
+      if (!players.has(friendId)) return  // ami hors-ligne
+      io.to(friendId).emit('apartment:invited', {
+        fromId:       socket.id,
+        fromUsername: player.username,
+        roomId:       player.roomId,
+      })
+    })
+    console.log(`[apt] ${player.username} invited friends to apartment`)
+  })
+
+  // ── Trade ────────────────────────────────
+  socket.on('trade:request', (data: { targetId: string }) => {
+    const sender = players.get(socket.id)
+    const target = players.get(data.targetId)
+    if (!sender || !target || socket.id === data.targetId) return
+    const tradeId = generateId()
+    io.to(data.targetId).emit('trade:request_received', {
+      tradeId,
+      fromId:       socket.id,
+      fromUsername: sender.username,
+    })
+  })
+
+  socket.on('trade:accept', (data: { tradeId: string; requesterId: string }) => {
+    const accepter  = players.get(socket.id)
+    const requester = players.get(data.requesterId)
+    if (!accepter || !requester) return
+    const trade: Trade = {
+      id: data.tradeId, playerAId: data.requesterId, playerBId: socket.id,
+      offerA: '', offerB: '', confirmedA: false, confirmedB: false,
+    }
+    activeTrades.set(data.tradeId, trade)
+    socket.emit('trade:started', { tradeId: data.tradeId, partnerId: data.requesterId, partnerUsername: requester.username })
+    io.to(data.requesterId).emit('trade:started', { tradeId: data.tradeId, partnerId: socket.id, partnerUsername: accepter.username })
+  })
+
+  socket.on('trade:decline', (data: { tradeId: string; requesterId: string }) => {
+    const decliner = players.get(socket.id)
+    io.to(data.requesterId).emit('trade:declined', { tradeId: data.tradeId, byUsername: decliner?.username ?? '???' })
+  })
+
+  socket.on('trade:update_offer', (data: { tradeId: string; offer: string }) => {
+    const trade = activeTrades.get(data.tradeId)
+    if (!trade) return
+    const isA = trade.playerAId === socket.id
+    if (!isA && trade.playerBId !== socket.id) return
+    const offer = data.offer.slice(0, 200)
+    if (isA) { trade.offerA = offer; trade.confirmedA = false; trade.confirmedB = false }
+    else      { trade.offerB = offer; trade.confirmedA = false; trade.confirmedB = false }
+    const partnerId = isA ? trade.playerBId : trade.playerAId
+    io.to(partnerId).emit('trade:offer_updated', { tradeId: data.tradeId, offer })
+  })
+
+  socket.on('trade:confirm', (data: { tradeId: string }) => {
+    const trade = activeTrades.get(data.tradeId)
+    if (!trade) return
+    const isA = trade.playerAId === socket.id
+    if (!isA && trade.playerBId !== socket.id) return
+    if (isA) trade.confirmedA = true; else trade.confirmedB = true
+    const partnerId = isA ? trade.playerBId : trade.playerAId
+    io.to(partnerId).emit('trade:partner_confirmed', { tradeId: data.tradeId })
+    if (trade.confirmedA && trade.confirmedB) {
+      const playerA = players.get(trade.playerAId)
+      const playerB = players.get(trade.playerBId)
+      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId })
+      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId })
+      const roomId = playerA?.roomId ?? playerB?.roomId
+      if (roomId) {
+        const room = rooms.get(roomId)
+        if (room) {
+          const sysMsg: ChatMessage = {
+            id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
+            text: `Trade between ${playerA?.username ?? '?'} and ${playerB?.username ?? '?'} completed!`,
+            roomId, timestamp: Date.now(), type: 'system',
+          }
+          addToHistory(room, sysMsg)
+          io.to(roomId).emit('chat:message', sysMsg)
+        }
+      }
+      activeTrades.delete(data.tradeId)
+    }
+  })
+
+  socket.on('trade:cancel', (data: { tradeId: string }) => {
+    const trade = activeTrades.get(data.tradeId)
+    if (!trade) return
+    if (trade.playerAId !== socket.id && trade.playerBId !== socket.id) return
+    const partnerId = trade.playerAId === socket.id ? trade.playerBId : trade.playerAId
+    io.to(partnerId).emit('trade:cancelled', { tradeId: data.tradeId })
+    socket.emit('trade:cancelled', { tradeId: data.tradeId })
+    activeTrades.delete(data.tradeId)
   })
 
   socket.on('disconnect', () => {
@@ -212,6 +426,20 @@ io.on('connection', (socket: Socket) => {
       io.to(player.roomId).emit('chat:message', leaveMsg)
       socket.to(player.roomId).emit('player:left', { id: player.id })
     }
+    friendships.get(socket.id)?.forEach(friendId => {
+      io.to(friendId).emit('friend:offline', { id: socket.id })
+    })
+    pendingFriendRequests.delete(socket.id)
+    pendingFriendRequests.forEach(set => set.delete(socket.id))
+    friendships.delete(socket.id)
+    // Cancel any active trade involving this player
+    activeTrades.forEach((trade, tradeId) => {
+      if (trade.playerAId === socket.id || trade.playerBId === socket.id) {
+        const partnerId = trade.playerAId === socket.id ? trade.playerBId : trade.playerAId
+        io.to(partnerId).emit('trade:cancelled', { tradeId })
+        activeTrades.delete(tradeId)
+      }
+    })
     players.delete(socket.id)
     console.log(`[-] Disconnected: ${player.username}`)
   })

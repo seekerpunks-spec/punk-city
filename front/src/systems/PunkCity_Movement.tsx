@@ -201,6 +201,9 @@ export function useMovement(
   // Indicateur visuel de destination (le petit losange qui clignote)
   const destinationMarker = useRef<Graphics | null>(null)
 
+  // Highlight de la tile survolée
+  const hoverMarker = useRef<Graphics | null>(null)
+
   // ── Init position de départ ──────────────
   useEffect(() => {
     const { x, y } = tileCenterPixel(player.current.gridX, player.current.gridY)
@@ -218,6 +221,41 @@ export function useMovement(
 
     // Durée du clic pour distinguer clic simple vs drag
     let pointerDownTime = 0
+    let lastHoverX = -1
+    let lastHoverY = -1
+
+    const onPointerMove = (e: any) => {
+      const localPos = world.toLocal({ x: e.globalX, y: e.globalY })
+      const gridPos  = screenToIso(localPos.x, localPos.y)
+
+      if (!isInBounds(gridPos.x, gridPos.y)) {
+        if (hoverMarker.current) hoverMarker.current.visible = false
+        lastHoverX = -1; lastHoverY = -1
+        return
+      }
+
+      if (gridPos.x === lastHoverX && gridPos.y === lastHoverY) return
+      lastHoverX = gridPos.x; lastHoverY = gridPos.y
+
+      if (!hoverMarker.current) {
+        hoverMarker.current = new Graphics()
+        hoverMarker.current.zIndex = 9000
+        world.addChild(hoverMarker.current)
+      }
+
+      const h = hoverMarker.current
+      h.clear()
+      const { x, y } = isoToScreen(gridPos.x, gridPos.y)
+      h.poly([
+        x,              y,
+        x + TILE_W / 2, y + TILE_H / 2,
+        x,              y + TILE_H,
+        x - TILE_W / 2, y + TILE_H / 2,
+      ])
+      h.fill({ color: 0xB421F3, alpha: 0.08 })
+      h.stroke({ color: 0xB421F3, width: 1.5, alpha: 0.55 })
+      h.visible = true
+    }
 
     const onPointerDown = () => {
       pointerDownTime = Date.now()
@@ -252,11 +290,13 @@ export function useMovement(
       showDestinationMarker(world, gridPos)
     }
 
+    app.stage.on('pointermove', onPointerMove)
     app.stage.on('pointerdown', onPointerDown)
     app.stage.on('pointerup', onClick)
     app.stage.eventMode = 'static'
 
     return () => {
+      app.stage.off('pointermove', onPointerMove)
       app.stage.off('pointerdown', onPointerDown)
       app.stage.off('pointerup', onClick)
     }

@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Application, Container, Graphics, Sprite, Ticker, Assets } from 'pixi.js'
 import { AnimatedGIF } from '@pixi/gif'
 import { useMovement, isoToScreen, useCameraFollow } from './systems/PunkCity_Movement'
-import { useChat, ChatPanel }                         from './systems/PunkCity_Chat'
+import { useChat, ChatPanel, SocialPanel }             from './systems/PunkCity_Chat'
 import { useRoomSystem, Minimap, RoomInfo, RoomTransitionOverlay } from './systems/PunkCity_Rooms'
 
 interface GameConfig {
@@ -132,18 +132,189 @@ function FloatingMessages({
 // Apparaît en bas-droite avec actions sociales
 // ─────────────────────────────────────────
 
-function PlayerPopup({
-  player,
+// ─────────────────────────────────────────
+// COMPOSANT — FENÊTRE PRIVATE MESSAGE
+// ─────────────────────────────────────────
+
+function PrivateChatWindow({
+  target,
+  messages,
+  onSend,
   onClose,
 }: {
-  player: { id: string; username: string }
-  onClose: () => void
+  target:   { id: string; username: string }
+  messages: { fromId: string; fromUsername: string; text: string; timestamp: number; mine: boolean }[]
+  onSend:   (text: string) => void
+  onClose:  () => void
 }) {
+  const [input, setInput] = useState('')
+  const endRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [messages])
+
+  const handleSend = () => {
+    if (!input.trim()) return
+    onSend(input.trim())
+    setInput('')
+  }
+
+  const formatTime = (ts: number) => {
+    const d = new Date(ts)
+    return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}`
+  }
+
   return (
     <div style={{
       position:     'fixed',
-      bottom:       24,
-      right:        24,
+      bottom:       16,
+      right:        292,
+      width:        260,
+      background:   'rgba(10,10,20,0.95)',
+      border:       '1px solid rgba(41,134,223,0.5)',
+      borderRadius: 12,
+      fontFamily:   'monospace',
+      fontSize:     12,
+      color:        '#ffffff',
+      zIndex:       2000,
+      backdropFilter: 'blur(12px)',
+      boxShadow:    '0 0 24px rgba(41,134,223,0.2)',
+      display:      'flex',
+      flexDirection:'column',
+    }}>
+      {/* Header */}
+      <div style={{
+        display:        'flex',
+        alignItems:     'center',
+        justifyContent: 'space-between',
+        padding:        '8px 12px',
+        borderBottom:   '1px solid rgba(41,134,223,0.3)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div style={{
+            width: 20, height: 20, borderRadius: '50%',
+            background: 'rgba(41,134,223,0.3)', border: '1px solid #2986DF',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: 9, color: '#2986DF', fontWeight: 'bold',
+          }}>
+            {target.username.charAt(0).toUpperCase()}
+          </div>
+          <span style={{ color: '#2986DF', fontWeight: 'bold', fontSize: 11 }}>
+            {target.username}
+          </span>
+        </div>
+        <button onClick={onClose} style={{
+          background: 'none', border: 'none', color: '#555',
+          cursor: 'pointer', fontSize: 13, padding: '0 2px',
+        }}>✕</button>
+      </div>
+
+      {/* Messages */}
+      <div style={{
+        height:        180,
+        overflowY:     'auto',
+        padding:       '8px 10px',
+        display:       'flex',
+        flexDirection: 'column',
+        gap:           4,
+        scrollbarWidth: 'thin',
+        scrollbarColor: '#2986DF transparent',
+      }}>
+        {messages.length === 0 && (
+          <div style={{ color: '#444', textAlign: 'center', marginTop: 60, fontSize: 10 }}>
+            Start a conversation...
+          </div>
+        )}
+        {messages.map((msg, i) => (
+          <div key={i} style={{
+            display:       'flex',
+            flexDirection: 'column',
+            alignItems:    msg.mine ? 'flex-end' : 'flex-start',
+          }}>
+            <div style={{
+              background:   msg.mine ? 'rgba(41,134,223,0.2)' : 'rgba(180,33,243,0.15)',
+              border:       `1px solid ${msg.mine ? 'rgba(41,134,223,0.4)' : 'rgba(180,33,243,0.3)'}`,
+              borderRadius: msg.mine ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
+              padding:      '4px 8px',
+              maxWidth:     '80%',
+              wordBreak:    'break-word',
+              fontSize:     11,
+            }}>
+              {msg.text}
+            </div>
+            <span style={{ color: '#333', fontSize: 9, marginTop: 1 }}>
+              {formatTime(msg.timestamp)}
+            </span>
+          </div>
+        ))}
+        <div ref={endRef} />
+      </div>
+
+      {/* Input */}
+      <div style={{
+        display:   'flex',
+        gap:       6,
+        padding:   '8px 10px',
+        borderTop: '1px solid rgba(41,134,223,0.3)',
+      }}>
+        <input
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          placeholder="Private message..."
+          maxLength={200}
+          autoFocus
+          style={{
+            flex:       1,
+            background: 'rgba(255,255,255,0.05)',
+            border:     '1px solid rgba(41,134,223,0.4)',
+            borderRadius: 6,
+            color:      '#ffffff',
+            padding:    '4px 8px',
+            fontSize:   11,
+            fontFamily: 'monospace',
+            outline:    'none',
+          }}
+        />
+        <button onClick={handleSend} style={{
+          background:   'rgba(41,134,223,0.2)',
+          border:       '1px solid #2986DF',
+          borderRadius: 6,
+          color:        '#2986DF',
+          padding:      '4px 10px',
+          cursor:       'pointer',
+          fontSize:     11,
+          fontFamily:   'monospace',
+        }}>↵</button>
+      </div>
+    </div>
+  )
+}
+
+function PlayerPopup({
+  player,
+  onClose,
+  onAddFriend,
+  onPrivateMessage,
+  onTrade,
+  onVisitApartment,
+  isOwnerInApartment,
+}: {
+  player: { id: string; username: string }
+  onClose: () => void
+  onAddFriend: (id: string) => void
+  onPrivateMessage: (player: { id: string; username: string }) => void
+  onTrade: (id: string) => void
+  onVisitApartment: (username: string) => void
+  isOwnerInApartment: boolean
+}) {
+  const [showAptMsg, setShowAptMsg] = useState(false)
+  return (
+    <div style={{
+      position:     'fixed',
+      bottom:       16,
+      right:        292,
       background:   'rgba(10,10,20,0.95)',
       border:       '1px solid rgba(180,33,243,0.5)',
       borderRadius: 12,
@@ -179,14 +350,14 @@ function PlayerPopup({
       {/* Actions */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {[
-          { icon: '👤', label: 'View Profile',    color: '#a0a0c0' },
-          { icon: '💬', label: 'Private Message',  color: '#2986DF' },
-          { icon: '👥', label: 'Add Friend',       color: '#00ff88' },
-          { icon: '🔄', label: 'Trade',            color: '#B421F3' },
+          { icon: '👤', label: 'View Profile',    color: '#a0a0c0', action: () => {} },
+          { icon: '💬', label: 'Private Message',  color: '#2986DF', action: () => { onPrivateMessage(player); onClose() } },
+          { icon: '👥', label: 'Add Friend',       color: '#00ff88', action: () => { onAddFriend(player.id); onClose() } },
+          { icon: '🔄', label: 'Trade',            color: '#B421F3', action: () => { onTrade(player.id); onClose() } },
         ].map(action => (
           <button
             key={action.label}
-            onClick={() => console.log(action.label, player.username)}
+            onClick={action.action}
             style={{
               display:      'flex',
               alignItems:   'center',
@@ -209,6 +380,195 @@ function PlayerPopup({
             <span>{action.label}</span>
           </button>
         ))}
+
+        {/* Visit Apartment — désactivé si le propriétaire n'est pas chez lui */}
+        <button
+          onClick={() => {
+            if (isOwnerInApartment) { onVisitApartment(player.username); onClose() }
+            else setShowAptMsg(true)
+          }}
+          style={{
+            display:      'flex',
+            alignItems:   'center',
+            gap:          8,
+            background:   'rgba(255,255,255,0.04)',
+            border:       '1px solid rgba(255,255,255,0.08)',
+            borderRadius: 7,
+            padding:      '6px 10px',
+            color:        isOwnerInApartment ? '#ffaa00' : '#555',
+            fontSize:     11,
+            fontFamily:   'monospace',
+            cursor:       'pointer',
+            textAlign:    'left',
+            transition:   'background 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.08)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+        >
+          <span>🏠</span>
+          <span>Visit Apartment</span>
+        </button>
+
+        {showAptMsg && (
+          <div style={{ color: '#ff6644', fontSize: 10, textAlign: 'center', marginTop: 2, fontFamily: 'monospace' }}>
+            {player.username} n'est pas dans son appartement
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// COMPOSANT — FENÊTRE DE TRADE (centré)
+// ─────────────────────────────────────────
+
+function TradeWindow({
+  trade,
+  onUpdateOffer,
+  onConfirm,
+  onCancel,
+}: {
+  trade: {
+    tradeId:         string
+    partnerId:       string
+    partnerUsername: string
+    myOffer:         string
+    partnerOffer:    string
+    myConfirmed:     boolean
+    partnerConfirmed: boolean
+  }
+  onUpdateOffer: (offer: string) => void
+  onConfirm:     () => void
+  onCancel:      () => void
+}) {
+  const [localOffer, setLocalOffer] = useState(trade.myOffer)
+
+  const handleOfferBlur = () => {
+    if (localOffer !== trade.myOffer) onUpdateOffer(localOffer)
+  }
+
+  const bothConfirmed = trade.myConfirmed && trade.partnerConfirmed
+
+  return (
+    <div style={{
+      position:      'fixed', inset: 0,
+      background:    'rgba(0,0,0,0.65)',
+      display:       'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex:        4000,
+      backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        width:        480,
+        background:   'rgba(10,10,20,0.98)',
+        border:       '1px solid rgba(180,33,243,0.6)',
+        borderRadius: 16,
+        fontFamily:   'monospace',
+        color:        '#ffffff',
+        boxShadow:    '0 0 48px rgba(180,33,243,0.3)',
+        overflow:     'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          display:        'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding:        '12px 18px',
+          borderBottom:   '1px solid rgba(180,33,243,0.3)',
+          background:     'rgba(180,33,243,0.08)',
+        }}>
+          <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
+            🔄 TRADE — {trade.partnerUsername}
+          </span>
+          <button onClick={onCancel} style={{
+            background: 'none', border: 'none', color: '#555',
+            cursor: 'pointer', fontSize: 16, padding: '0 4px',
+          }}>✕</button>
+        </div>
+
+        {/* Two columns */}
+        <div style={{ display: 'flex', gap: 1, padding: '16px', paddingBottom: 12 }}>
+          {/* My column */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 10, color: '#B421F3', fontWeight: 'bold', letterSpacing: 1, marginBottom: 2 }}>
+              VOUS {trade.myConfirmed && <span style={{ color: '#00ff88' }}>✓ CONFIRMÉ</span>}
+            </div>
+            <textarea
+              value={localOffer}
+              onChange={e => setLocalOffer(e.target.value)}
+              onBlur={handleOfferBlur}
+              placeholder="Décrivez votre offre..."
+              maxLength={200}
+              disabled={trade.myConfirmed}
+              style={{
+                width:       '100%', height: 120,
+                background:  trade.myConfirmed ? 'rgba(180,33,243,0.05)' : 'rgba(255,255,255,0.05)',
+                border:      `1px solid ${trade.myConfirmed ? 'rgba(0,255,136,0.4)' : 'rgba(180,33,243,0.4)'}`,
+                borderRadius: 8,
+                color:       '#ffffff', padding: '8px',
+                fontSize:    11, fontFamily: 'monospace',
+                outline:     'none', resize: 'none',
+                boxSizing:   'border-box',
+                opacity:     trade.myConfirmed ? 0.7 : 1,
+              }}
+            />
+          </div>
+
+          <div style={{ width: 1, background: 'rgba(180,33,243,0.2)', margin: '0 8px' }} />
+
+          {/* Partner column */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ fontSize: 10, color: '#2986DF', fontWeight: 'bold', letterSpacing: 1, marginBottom: 2 }}>
+              {trade.partnerUsername.toUpperCase()} {trade.partnerConfirmed && <span style={{ color: '#00ff88' }}>✓ CONFIRMÉ</span>}
+            </div>
+            <div style={{
+              height:       120,
+              background:   'rgba(41,134,223,0.05)',
+              border:       `1px solid ${trade.partnerConfirmed ? 'rgba(0,255,136,0.4)' : 'rgba(41,134,223,0.3)'}`,
+              borderRadius: 8,
+              padding:      '8px',
+              fontSize:     11,
+              color:        trade.partnerOffer ? '#ffffff' : '#444',
+              overflowY:    'auto',
+              whiteSpace:   'pre-wrap',
+              wordBreak:    'break-word',
+            }}>
+              {trade.partnerOffer || 'En attente...'}
+            </div>
+          </div>
+        </div>
+
+        {/* Actions */}
+        <div style={{
+          display: 'flex', gap: 8, padding: '0 16px 16px',
+        }}>
+          {!trade.myConfirmed && (
+            <button
+              onClick={() => { if (localOffer !== trade.myOffer) onUpdateOffer(localOffer); onConfirm() }}
+              style={{
+                flex: 1, background: 'rgba(0,255,136,0.15)', border: '1px solid #00ff88',
+                borderRadius: 8, color: '#00ff88', fontSize: 11, fontFamily: 'monospace',
+                padding: '8px 0', cursor: 'pointer', fontWeight: 'bold',
+              }}
+            >✓ Confirmer</button>
+          )}
+          {trade.myConfirmed && !bothConfirmed && (
+            <div style={{
+              flex: 1, textAlign: 'center', fontSize: 11, color: '#00ff88',
+              padding: '8px 0', letterSpacing: 1,
+            }}>
+              ✓ En attente de {trade.partnerUsername}...
+            </div>
+          )}
+          <button
+            onClick={onCancel}
+            style={{
+              flex: trade.myConfirmed ? 1 : undefined,
+              minWidth: 80,
+              background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
+              borderRadius: 8, color: '#ff4444', fontSize: 11, fontFamily: 'monospace',
+              padding: '8px 0', cursor: 'pointer',
+            }}
+          >✕ Annuler</button>
+        </div>
       </div>
     </div>
   )
@@ -234,7 +594,14 @@ function InnerGame({
 
   const {
     messages, players, connected, myPlayer,
+    friendRequests, friends, pmConversations, unreadPMs, pmToasts,
+    tradeRequests, activeTrade,
+    apartmentInvites, sendApartmentInvite, dismissApartmentInvite,
     sendMessage, sendEmote, reportMove, changeRoom,
+    sendFriendRequest, acceptFriendRequest, declineFriendRequest,
+    sendPM, dismissPMToast, markPMsRead,
+    sendTradeRequest, acceptTrade, declineTrade,
+    updateTradeOffer, confirmTrade, cancelTrade,
   } = useChat({
     serverUrl:     config.serverUrl,
     username:      config.username,
@@ -244,7 +611,31 @@ function InnerGame({
     onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
   })
 
+  // ── Autres joueurs ───────────────────────
+  // Déclaré ICI (avant onRoomChange) pour pouvoir nettoyer les sprites
+  // de façon synchrone lors d'un changement de room.
+  const otherSprites = useRef<Map<string, any>>(new Map())
+
   const onRoomChange = useCallback((roomId: string, spawnX: number, spawnY: number) => {
+    // Nettoyage synchrone des sprites de l'ancienne room
+    otherSprites.current.forEach((container) => {
+      if (container && container._walkGif) {
+        try {
+          world.removeChild(container._walkGif)
+          world.removeChild(container._idleSw)
+          world.removeChild(container._spriteSe)
+          world.removeChild(container._spriteNw)
+          world.removeChild(container._spriteNe)
+          container._walkGif.destroy()
+          container._idleSw.destroy()
+          container._spriteSe.destroy()
+          container._spriteNw.destroy()
+          container._spriteNe.destroy()
+        } catch (_) {}
+      }
+    })
+    otherSprites.current.clear()
+
     const { x, y } = isoToScreen(spawnX, spawnY)
     playerRef.current.gridX  = spawnX
     playerRef.current.gridY  = spawnY
@@ -295,10 +686,18 @@ function InnerGame({
         const newY = container._walkGif.y + (ty - container._walkGif.y) * 0.2
         // Sync tous les sprites à la même position
         container._walkGif.x  = newX; container._walkGif.y  = newY
-        container._idleSw.x   = newX; container._idleSw.y   = newY
+        container._idleSw.x   = newX; container._idleSw.y   = newY + IDLE_Y_OFFSET
         container._spriteSe.x = newX; container._spriteSe.y = newY
         container._spriteNw.x = newX; container._spriteNw.y = newY
         container._spriteNe.x = newX; container._spriteNe.y = newY
+
+        // Tri isométrique — zIndex = Y des pieds, mis à jour chaque frame
+        const z = Math.round(newY)
+        container._walkGif.zIndex  = z
+        container._idleSw.zIndex   = z
+        container._spriteSe.zIndex = z
+        container._spriteNw.zIndex = z
+        container._spriteNe.zIndex = z
 
         // Si pas de mouvement reçu depuis 400ms → idle
         const idle = !container._lastMoveTime || (Date.now() - container._lastMoveTime) > 400
@@ -313,8 +712,6 @@ function InnerGame({
     return () => { app.ticker.remove(tick) }
   }, [])
 
-  // ── Autres joueurs ───────────────────────
-  const otherSprites = useRef<Map<string, any>>(new Map())
 
   // ── Callback direct pour les positions (bypass React, 60fps) ──
   // Branché ici pour avoir accès à otherSprites
@@ -360,6 +757,12 @@ function InnerGame({
           Assets.load('/sprite_nw.png'),
           Assets.load('/sprite_ne.png'),
         ]).then(([walkGif, sw, se, nw, ne]) => {
+          // Guard : si le joueur a été retiré pendant le chargement async (changement de room),
+          // on détruit les assets et on abandonne — évite les fantômes inter-rooms
+          if (!otherSprites.current.has(p.id)) {
+            walkGif.destroy()
+            return
+          }
           // GIF de marche sw
           walkGif.anchor.set(0.5, 1)
           walkGif.scale.set(0.8)
@@ -385,21 +788,17 @@ function InnerGame({
           world.addChild(spriteNw)
           world.addChild(spriteNe)
 
-          // Ajoute le clic sur chaque sprite pour ouvrir le popup
-          const playerId   = p.id
-          const playerName = p.username
-          const onClick = () => onPlayerClickRef.current(playerId, playerName)
+          // Curseur pointer au survol — le clic est géré par le listener de stage
           ;[walkGif, idleSw, spriteSe, spriteNw, spriteNe].forEach(s => {
             s.eventMode = 'static'
             s.cursor    = 'pointer'
-            s.on('pointerdown', onClick)
           })
 
           // Position initiale depuis la dernière position connue du joueur
           const initX = (p as any).pixiX || isoToScreen(p.gridX, p.gridY).x
           const initY = (p as any).pixiY || isoToScreen(p.gridX, p.gridY).y
           walkGif.x  = initX; walkGif.y  = initY
-          idleSw.x   = initX; idleSw.y   = initY
+          idleSw.x   = initX; idleSw.y   = initY + IDLE_Y_OFFSET
           spriteSe.x = initX; spriteSe.y = initY
           spriteNw.x = initX; spriteNw.y = initY
           spriteNe.x = initX; spriteNe.y = initY
@@ -419,6 +818,8 @@ function InnerGame({
             _currentDir: 'sw',
             _targetX: initX,
             _targetY: initY,
+            _playerId:  p.id,
+            _username:  p.username,
           }
           otherSprites.current.set(p.id, container)
         })
@@ -447,6 +848,58 @@ function InnerGame({
       }
     })
   }, [players, myPlayer])
+
+  // ── Clic sur un autre joueur via le stage (bypass hit-testing PixiJS) ───────
+  // Les events sur les sprites individuels ne remontent pas toujours correctement.
+  // On écoute directement le stage et on fait la détection de collision manuellement.
+  useEffect(() => {
+    const onStageDown = (e: any) => {
+      // Convertit les coords écran → coords monde
+      const localPos = world.toLocal({ x: e.globalX, y: e.globalY })
+
+      otherSprites.current.forEach((container) => {
+        if (!container || !container._walkGif) return
+        // Le sprite est ancré en bas au centre (anchor 0.5, 1)
+        const px = container._walkGif.x
+        const py = container._walkGif.y
+        const dx = Math.abs(localPos.x - px)
+        const dy = py - localPos.y   // positif = clic au-dessus des pieds
+        // Zone de clic : ±45px en X, de -10 à 110px en Y au-dessus des pieds
+        if (dx < 45 && dy > -10 && dy < 110) {
+          onPlayerClickRef.current(container._playerId, container._username)
+        }
+      })
+    }
+
+    app.stage.on('pointerdown', onStageDown)
+    return () => { app.stage.off('pointerdown', onStageDown) }
+  }, [])
+
+  // Nettoyage au démontage — évite les sprites orphelins après HMR ou re-mount
+  useEffect(() => {
+    return () => {
+      try {
+        otherSprites.current.forEach((container) => {
+          if (container && container._walkGif) {
+            world.removeChild(container._walkGif)
+            world.removeChild(container._idleSw)
+            world.removeChild(container._spriteSe)
+            world.removeChild(container._spriteNw)
+            world.removeChild(container._spriteNe)
+            container._walkGif.destroy()
+            container._idleSw.destroy()
+            container._spriteSe.destroy()
+            container._spriteNw.destroy()
+            container._spriteNe.destroy()
+          }
+        })
+      } catch (_) {
+        // world peut déjà être détruit si l'app entière se démonte
+      } finally {
+        otherSprites.current.clear()
+      }
+    }
+  }, [])
 
   // ── Messages flottants — s'empilent vers le haut ────
   // Max 4 messages par joueur, disparaissent après 8s
@@ -488,11 +941,16 @@ function InnerGame({
 
   // ── Popup joueur au clic ─────────────────
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; username: string } | null>(null)
-  // Ref pour accéder à setSelectedPlayer depuis les callbacks PixiJS
-  const onPlayerClickRef = useRef<(id: string, username: string) => void>(() => {})
+  const [pmTarget,       setPmTarget]       = useState<{ id: string; username: string } | null>(null)
+
+  // Marque les PMs comme lus à l'ouverture de la fenêtre
   useEffect(() => {
-    onPlayerClickRef.current = (id: string, username: string) => setSelectedPlayer({ id, username })
-  }, [])
+    if (pmTarget) markPMsRead(pmTarget.id)
+  }, [pmTarget])
+  // Ref pour accéder à setSelectedPlayer depuis les callbacks PixiJS
+  // Mis à jour à chaque render — toujours à jour, pas de stale closure possible
+  const onPlayerClickRef = useRef<(id: string, username: string) => void>(() => {})
+  onPlayerClickRef.current = (id: string, username: string) => setSelectedPlayer({ id, username })
 
   // ── Position temps réel du joueur local ──
   const [myPixiPos, setMyPixiPos] = useState({ x: 0, y: 0 })
@@ -509,39 +967,273 @@ function InnerGame({
     <>
       <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
       <RoomInfo room={activeRoom} />
+
+      {/* Chat — bas gauche */}
       <ChatPanel
         messages={messages}
-        players={players}
         myPlayerId={myPlayer?.id ?? ''}
         connected={connected}
         onSend={sendMessage}
         onEmote={sendEmote}
-        onChangeRoom={loadRoom}
+      />
+
+      {/* Panneau social — bas droite */}
+      <SocialPanel
+        players={players}
+        myPlayerId={myPlayer?.id ?? ''}
+        friends={friends}
+        pmConversations={pmConversations}
+        unreadPMs={unreadPMs}
+        onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
+        onMyApartment={() => loadRoom(`apartment_${config.username}`)}
       />
 
       {/* Messages flottants pour chaque joueur */}
       {players.map(p => {
-        const isMe    = p.id === myPlayer?.id
-        const px      = isMe ? myPixiPos.x : ((p as any).pixiX ?? isoToScreen(p.gridX, p.gridY).x)
-        const py      = isMe ? myPixiPos.y : ((p as any).pixiY ?? isoToScreen(p.gridX, p.gridY).y)
-        const msgs    = floatingMsgs.get(p.id) ?? []
-
+        const isMe = p.id === myPlayer?.id
+        const px   = isMe ? myPixiPos.x : ((p as any).pixiX ?? isoToScreen(p.gridX, p.gridY).x)
+        const py   = isMe ? myPixiPos.y : ((p as any).pixiY ?? isoToScreen(p.gridX, p.gridY).y)
         return (
-          <FloatingMessages
-            key={p.id}
-            messages={msgs}
-            pixiX={px}
-            pixiY={py}   // ← position pied du perso, offset géré dans FloatingMessages
-            world={world}
-          />
+          <FloatingMessages key={p.id} messages={floatingMsgs.get(p.id) ?? []} pixiX={px} pixiY={py} world={world} />
         )
       })}
 
-      {/* Popup joueur en bas-droite au clic */}
+      {/* Boutons appartement — visibles uniquement dans un appartement */}
+      {activeRoomId.startsWith('apartment_') && (
+        <div style={{
+          position:  'fixed',
+          top:       72,
+          left:      '50%',
+          transform: 'translateX(-50%)',
+          display:   'flex',
+          gap:       8,
+          zIndex:    500,
+        }}>
+          <button
+            onClick={() => loadRoom('genesis-plaza', 1, 12)}
+            style={{
+              background:   'rgba(10,10,20,0.9)',
+              border:       '1px solid rgba(180,33,243,0.5)',
+              borderRadius: 8,
+              color:        '#B421F3',
+              fontSize:     11,
+              fontFamily:   'monospace',
+              padding:      '5px 14px',
+              cursor:       'pointer',
+              backdropFilter: 'blur(8px)',
+            }}
+          >← Leave Apartment</button>
+
+          {/* Invite uniquement si on est dans son propre appartement (côté client ET serveur) */}
+          {activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}` && (
+            <button
+              onClick={sendApartmentInvite}
+              style={{
+                background:   'rgba(10,10,20,0.9)',
+                border:       '1px solid rgba(255,170,0,0.5)',
+                borderRadius: 8,
+                color:        '#ffaa00',
+                fontSize:     11,
+                fontFamily:   'monospace',
+                padding:      '5px 14px',
+                cursor:       'pointer',
+                backdropFilter: 'blur(8px)',
+              }}
+            >📨 Invite Friends</button>
+          )}
+        </div>
+      )}
+
+      {/* Popup joueur — à gauche du panneau social */}
       {selectedPlayer && (
         <PlayerPopup
           player={selectedPlayer}
           onClose={() => setSelectedPlayer(null)}
+          onAddFriend={sendFriendRequest}
+          onPrivateMessage={p => { setPmTarget(p); setSelectedPlayer(null) }}
+          onTrade={id => { sendTradeRequest(id); setSelectedPlayer(null) }}
+          onVisitApartment={username => { loadRoom(`apartment_${username}`); setSelectedPlayer(null) }}
+          isOwnerInApartment={
+            players.find(p => p.id === selectedPlayer.id)?.roomId === `apartment_${selectedPlayer.username}`
+          }
+        />
+      )}
+
+      {/* Fenêtre PM — à gauche du panneau social */}
+      {pmTarget && (
+        <PrivateChatWindow
+          target={pmTarget}
+          messages={pmConversations.get(pmTarget.id) ?? []}
+          onSend={text => sendPM(pmTarget.id, text)}
+          onClose={() => setPmTarget(null)}
+        />
+      )}
+
+      {/* Overlay centre-bas : demandes d'amis + toasts PM */}
+      <div style={{
+        position:  'fixed',
+        bottom:    100,
+        left:      '50%',
+        transform: 'translateX(-50%)',
+        display:   'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap:       8,
+        zIndex:    3000,
+        pointerEvents: 'none',
+      }}>
+        {/* Invitations appartement */}
+        {apartmentInvites.map(inv => (
+          <div key={inv.fromId} style={{
+            background:    'rgba(10,10,20,0.95)',
+            border:        '1px solid rgba(255,170,0,0.6)',
+            borderRadius:  10,
+            padding:       '10px 14px',
+            fontFamily:    'monospace',
+            boxShadow:     '0 0 16px rgba(255,170,0,0.2)',
+            pointerEvents: 'all',
+            animation:     'fadeIn 0.2s ease',
+            minWidth:      220,
+          }}>
+            <div style={{ fontSize: 11, color: '#ffaa00', marginBottom: 6 }}>
+              🏠 <b>{inv.fromUsername}</b> vous invite dans son appartement
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                onClick={() => { loadRoom(inv.roomId); dismissApartmentInvite(inv.fromId) }}
+                style={{
+                  flex: 1, background: 'rgba(255,170,0,0.15)', border: '1px solid #ffaa00',
+                  borderRadius: 6, color: '#ffaa00', fontSize: 10, fontFamily: 'monospace',
+                  padding: '3px 0', cursor: 'pointer',
+                }}
+              >✓ Accepter</button>
+              <button
+                onClick={() => dismissApartmentInvite(inv.fromId)}
+                style={{
+                  flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
+                  borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
+                  padding: '3px 0', cursor: 'pointer',
+                }}
+              >✕ Refuser</button>
+            </div>
+          </div>
+        ))}
+
+        {/* Demandes de trade */}
+        {tradeRequests.map(req => (
+          <div key={req.tradeId} style={{
+            background:    'rgba(10,10,20,0.95)',
+            border:        '1px solid rgba(180,33,243,0.6)',
+            borderRadius:  10,
+            padding:       '10px 14px',
+            fontFamily:    'monospace',
+            boxShadow:     '0 0 16px rgba(180,33,243,0.25)',
+            pointerEvents: 'all',
+            animation:     'fadeIn 0.2s ease',
+            minWidth:      220,
+          }}>
+            <div style={{ fontSize: 11, color: '#B421F3', marginBottom: 6 }}>
+              🔄 <b>{req.fromUsername}</b> vous propose un trade
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => acceptTrade(req.tradeId, req.fromId)} style={{
+                flex: 1, background: 'rgba(180,33,243,0.15)', border: '1px solid #B421F3',
+                borderRadius: 6, color: '#B421F3', fontSize: 10, fontFamily: 'monospace',
+                padding: '3px 0', cursor: 'pointer',
+              }}>✓ Accepter</button>
+              <button onClick={() => declineTrade(req.tradeId, req.fromId)} style={{
+                flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
+                borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
+                padding: '3px 0', cursor: 'pointer',
+              }}>✕ Refuser</button>
+            </div>
+          </div>
+        ))}
+
+        {/* Demandes d'amis */}
+        {friendRequests.map(req => (
+          <div key={req.fromId} style={{
+            background:    'rgba(10,10,20,0.95)',
+            border:        '1px solid #00ff88',
+            borderRadius:  10,
+            padding:       '10px 14px',
+            fontFamily:    'monospace',
+            boxShadow:     '0 0 16px rgba(0,255,136,0.2)',
+            pointerEvents: 'all',
+            animation:     'fadeIn 0.2s ease',
+            minWidth:      220,
+          }}>
+            <div style={{ fontSize: 11, color: '#00ff88', marginBottom: 6 }}>
+              👥 <b>{req.fromUsername}</b> wants to be your friend
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => acceptFriendRequest(req.fromId)} style={{
+                flex: 1, background: 'rgba(0,255,136,0.15)', border: '1px solid #00ff88',
+                borderRadius: 6, color: '#00ff88', fontSize: 10, fontFamily: 'monospace',
+                padding: '3px 0', cursor: 'pointer',
+              }}>✓ Accept</button>
+              <button onClick={() => declineFriendRequest(req.fromId)} style={{
+                flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
+                borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
+                padding: '3px 0', cursor: 'pointer',
+              }}>✕ Decline</button>
+            </div>
+          </div>
+        ))}
+
+        {/* Toasts PM */}
+        {pmToasts.map(toast => (
+          <div
+            key={toast.id}
+            onClick={() => {
+              setPmTarget({ id: toast.fromId, username: toast.fromUsername })
+              dismissPMToast(toast.id)
+            }}
+            style={{
+              background:    'rgba(10,10,20,0.96)',
+              border:        '1px solid rgba(41,134,223,0.6)',
+              borderRadius:  10,
+              padding:       '10px 14px',
+              fontFamily:    'monospace',
+              boxShadow:     '0 0 16px rgba(41,134,223,0.25)',
+              cursor:        'pointer',
+              pointerEvents: 'all',
+              animation:     'fadeIn 0.2s ease',
+              minWidth:      220,
+              maxWidth:      280,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+              <div style={{
+                width: 18, height: 18, borderRadius: '50%',
+                background: 'rgba(41,134,223,0.3)', border: '1px solid #2986DF',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 9, color: '#2986DF', fontWeight: 'bold', flexShrink: 0,
+              }}>
+                {toast.fromUsername.charAt(0).toUpperCase()}
+              </div>
+              <span style={{ color: '#2986DF', fontWeight: 'bold', fontSize: 11 }}>
+                {toast.fromUsername}
+              </span>
+              <span style={{ color: '#333', fontSize: 9, marginLeft: 'auto' }}>💬 PM</span>
+            </div>
+            <div style={{
+              color: '#a0a0c0', fontSize: 11,
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>
+              {toast.text}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Fenêtre de trade — centré plein écran */}
+      {activeTrade && (
+        <TradeWindow
+          trade={activeTrade}
+          onUpdateOffer={offer => updateTradeOffer(activeTrade.tradeId, offer)}
+          onConfirm={() => confirmTrade(activeTrade.tradeId)}
+          onCancel={() => cancelTrade(activeTrade.tradeId)}
         />
       )}
 
@@ -701,6 +1393,8 @@ function HUD({ connected, roomName, playerCount, username }: {
 // marche autres directions → sprite statique
 // ─────────────────────────────────────────
 
+const IDLE_Y_OFFSET = -(128 - 112) * 0.8  // -12.8px — aligne les pieds idle (112px) avec le GIF walk (128px)
+
 async function buildPlayerSprite(world: Container, app: Application): Promise<Graphics> {
   const [walkGif, textureSw, textureSe, textureNw, textureNe] = await Promise.all([
     fetch('/walk_sw.gif').then(r => r.arrayBuffer()).then(b => AnimatedGIF.fromBuffer(b)),
@@ -806,10 +1500,18 @@ async function buildPlayerSprite(world: Container, app: Application): Promise<Gr
     }
 
     walkGif.x   = g.x; walkGif.y   = g.y
-    idleSw.x    = g.x; idleSw.y    = g.y
+    idleSw.x    = g.x; idleSw.y    = g.y + IDLE_Y_OFFSET
     spritesSe.x = g.x; spritesSe.y = g.y
     spritesNw.x = g.x; spritesNw.y = g.y
     spritesNe.x = g.x; spritesNe.y = g.y
+
+    // Tri isométrique — zIndex = Y des pieds, mis à jour chaque frame
+    const z = Math.round(g.y)
+    walkGif.zIndex   = z
+    idleSw.zIndex    = z
+    spritesSe.zIndex = z
+    spritesNw.zIndex = z
+    spritesNe.zIndex = z
 
     lastX = g.x
     lastY = g.y
