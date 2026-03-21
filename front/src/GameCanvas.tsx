@@ -596,7 +596,7 @@ function InnerGame({
     messages, players, connected, myPlayer,
     friendRequests, friends, pmConversations, unreadPMs, pmToasts,
     tradeRequests, activeTrade,
-    apartmentInvites, sendApartmentInvite, dismissApartmentInvite,
+    apartmentInvites, sendApartmentInviteToOne, dismissApartmentInvite,
     sendMessage, sendEmote, reportMove, changeRoom,
     sendFriendRequest, acceptFriendRequest, declineFriendRequest,
     sendPM, dismissPMToast, markPMsRead,
@@ -987,6 +987,8 @@ function InnerGame({
         onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
         onMyApartment={() => loadRoom(`apartment_${config.username}`)}
         onSelectPlayer={p => setSelectedPlayer(p)}
+        inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
+        onInviteToApartment={sendApartmentInviteToOne}
       />
 
       {/* Messages flottants pour chaque joueur */}
@@ -1025,23 +1027,6 @@ function InnerGame({
             }}
           >← Leave Apartment</button>
 
-          {/* Invite uniquement si on est dans son propre appartement (côté client ET serveur) */}
-          {activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}` && (
-            <button
-              onClick={sendApartmentInvite}
-              style={{
-                background:   'rgba(10,10,20,0.9)',
-                border:       '1px solid rgba(255,170,0,0.5)',
-                borderRadius: 8,
-                color:        '#ffaa00',
-                fontSize:     11,
-                fontFamily:   'monospace',
-                padding:      '5px 14px',
-                cursor:       'pointer',
-                backdropFilter: 'blur(8px)',
-              }}
-            >📨 Invite Friends</button>
-          )}
         </div>
       )}
 

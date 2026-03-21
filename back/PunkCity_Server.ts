@@ -328,6 +328,20 @@ io.on('connection', (socket: Socket) => {
     console.log(`[apt] ${player.username} invited friends to apartment`)
   })
 
+  socket.on('apartment:invite-one', (data: { targetId: string }) => {
+    const player = players.get(socket.id)
+    if (!player) return
+    if (player.roomId !== `apartment_${player.username}`) return
+    const isFriend = friendships.get(socket.id)?.has(data.targetId)
+    if (!isFriend || !players.has(data.targetId)) return
+    io.to(data.targetId).emit('apartment:invited', {
+      fromId:       socket.id,
+      fromUsername: player.username,
+      roomId:       player.roomId,
+    })
+    console.log(`[apt] ${player.username} invited ${players.get(data.targetId)?.username} to apartment`)
+  })
+
   // ── Trade ────────────────────────────────
   socket.on('trade:request', (data: { targetId: string }) => {
     const sender = players.get(socket.id)

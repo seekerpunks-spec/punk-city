@@ -271,6 +271,10 @@ export function useChat(options: UseChatOptions) {
     socketRef.current?.emit('apartment:invite')
   }, [])
 
+  const sendApartmentInviteToOne = useCallback((targetId: string) => {
+    socketRef.current?.emit('apartment:invite-one', { targetId })
+  }, [])
+
   const dismissApartmentInvite = useCallback((fromId: string) => {
     setApartmentInvites(prev => prev.filter(i => i.fromId !== fromId))
   }, [])
@@ -380,6 +384,7 @@ export function useChat(options: UseChatOptions) {
     cancelTrade,
     apartmentInvites,
     sendApartmentInvite,
+    sendApartmentInviteToOne,
     dismissApartmentInvite,
   }
 }
@@ -602,10 +607,12 @@ export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote }: 
 type PMMsg = { fromId: string; fromUsername: string; text: string; timestamp: number; mine: boolean }
 
 interface SocialPanelProps {
-  players:         Player[]
-  myPlayerId:      string
-  friends:         { id: string; username: string; online: boolean; roomId: string }[]
-  onSelectPlayer?: (player: { id: string; username: string }) => void
+  players:              Player[]
+  myPlayerId:           string
+  friends:              { id: string; username: string; online: boolean; roomId: string }[]
+  inMyApartment?:       boolean
+  onInviteToApartment?: (friendId: string) => void
+  onSelectPlayer?:      (player: { id: string; username: string }) => void
   pmConversations: Map<string, PMMsg[]>
   unreadPMs:       Map<string, number>
   onOpenPM:        (target: { id: string; username: string }) => void
@@ -613,7 +620,8 @@ interface SocialPanelProps {
 }
 
 export function SocialPanel({
-  players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment, onSelectPlayer,
+  players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment,
+  onSelectPlayer, inMyApartment, onInviteToApartment,
 }: SocialPanelProps) {
   const [tab, setTab] = useState<'online' | 'friends' | 'messages'>('online')
 
@@ -790,6 +798,17 @@ export function SocialPanel({
                           cursor: 'pointer', fontFamily: 'monospace', flexShrink: 0,
                         }}
                       >PM</button>
+                    )}
+                    {f.online && inMyApartment && (
+                      <button
+                        onClick={e => { e.stopPropagation(); onInviteToApartment?.(f.id) }}
+                        title="Invite to apartment"
+                        style={{
+                          background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+                          borderRadius: 5, color: '#B421F3', fontSize: 9, padding: '3px 7px',
+                          cursor: 'pointer', fontFamily: 'monospace', flexShrink: 0,
+                        }}
+                      >🏠</button>
                     )}
                   </div>
                 )
