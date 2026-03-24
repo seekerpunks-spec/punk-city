@@ -424,8 +424,18 @@ io.on('connection', (socket: Socket) => {
     if (trade.confirmedA && trade.confirmedB) {
       const playerA = players.get(trade.playerAId)
       const playerB = players.get(trade.playerBId)
-      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId })
-      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId })
+
+      // Swap items between inventories
+      const invA = inventories.get(trade.playerAId) ?? []
+      const invB = inventories.get(trade.playerBId) ?? []
+      const newInvA = [...invA.filter(id => !trade.offerA.includes(id)), ...trade.offerB]
+      const newInvB = [...invB.filter(id => !trade.offerB.includes(id)), ...trade.offerA]
+      inventories.set(trade.playerAId, newInvA)
+      inventories.set(trade.playerBId, newInvB)
+
+      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvA })
+      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvB })
+
       const roomId = playerA?.roomId ?? playerB?.roomId
       if (roomId) {
         const room = rooms.get(roomId)
