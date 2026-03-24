@@ -59,8 +59,8 @@ interface Trade {
   id:         string
   playerAId:  string  // requester
   playerBId:  string  // accepter
-  offerA:     string
-  offerB:     string
+  offerA:     string[]  // item IDs
+  offerB:     string[]
   confirmedA: boolean
   confirmedB: boolean
 }
