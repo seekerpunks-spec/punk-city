@@ -431,6 +431,16 @@ io.on('connection', (socket: Socket) => {
       const playerA = players.get(trade.playerAId)
       const playerB = players.get(trade.playerBId)
 
+      // Validate both players still have enough credits
+      const walA = wallets.get(trade.playerAId) ?? 0
+      const walB = wallets.get(trade.playerBId) ?? 0
+      if (trade.creditsA > walA || trade.creditsB > walB) {
+        io.to(trade.playerAId).emit('trade:cancelled', { tradeId: data.tradeId })
+        io.to(trade.playerBId).emit('trade:cancelled', { tradeId: data.tradeId })
+        activeTrades.delete(data.tradeId)
+        return
+      }
+
       // Swap items between inventories
       const invA = inventories.get(trade.playerAId) ?? []
       const invB = inventories.get(trade.playerBId) ?? []
@@ -439,8 +449,14 @@ io.on('connection', (socket: Socket) => {
       inventories.set(trade.playerAId, newInvA)
       inventories.set(trade.playerBId, newInvB)
 
-      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvA })
-      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvB })
+      // Transfer credits
+      const newWalA = walA - trade.creditsA + trade.creditsB
+      const newWalB = walB - trade.creditsB + trade.creditsA
+      wallets.set(trade.playerAId, newWalA)
+      wallets.set(trade.playerBId, newWalB)
+
+      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvA, neonCredits: newWalA })
+      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvB, neonCredits: newWalB })
 
       const roomId = playerA?.roomId ?? playerB?.roomId
       if (roomId) {
