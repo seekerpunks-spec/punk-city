@@ -481,16 +481,24 @@ io.on('connection', (socket: Socket) => {
   })
 
   // ── Shop ─────────────────────────────────
-  socket.on('shop:buy', (data: { itemId: string }) => {
+  socket.on('get_shop', () => {
+    socket.emit('shop_data', {
+      items:       SHOP_CATALOG,
+      neonCredits: wallets.get(socket.id) ?? 0,
+      inventory:   inventories.get(socket.id) ?? [],
+    })
+  })
+
+  socket.on('buy_item', (data: { itemId: string }) => {
     const item = SHOP_CATALOG.find(i => i.id === data.itemId)
     if (!item) return
     const credits   = wallets.get(socket.id) ?? 0
     const inventory = inventories.get(socket.id) ?? []
-    if (credits < item.price) return socket.emit('shop:error', { message: 'Not enough Neon Credits.' })
-    if (inventory.includes(item.id)) return socket.emit('shop:error', { message: 'You already own this item.' })
+    if (credits < item.price) return socket.emit('buy_item_error', { message: 'Not enough Neon Credits.' })
+    if (inventory.includes(item.id)) return socket.emit('buy_item_error', { message: 'You already own this item.' })
     wallets.set(socket.id, credits - item.price)
     inventories.set(socket.id, [...inventory, item.id])
-    socket.emit('shop:purchased', {
+    socket.emit('buy_item_success', {
       itemId:      item.id,
       neonCredits: wallets.get(socket.id)!,
       inventory:   inventories.get(socket.id)!,
