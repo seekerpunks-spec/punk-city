@@ -1079,6 +1079,46 @@ function InnerGame({
 
   return (
     <>
+      {/* HUD — top left: username + Neon Credits + Market button */}
+      <div style={{
+        position:      'fixed',
+        top:           16,
+        left:          16,
+        display:       'flex',
+        alignItems:    'center',
+        gap:           10,
+        zIndex:        500,
+        background:    'rgba(10,10,20,0.9)',
+        border:        '1px solid rgba(97,0,151,0.5)',
+        borderRadius:  10,
+        padding:       '7px 14px',
+        fontFamily:    'monospace',
+        backdropFilter: 'blur(8px)',
+        boxShadow:     '0 0 20px rgba(97,0,151,0.3)',
+      }}>
+        <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 12 }}>
+          {config.username}
+        </span>
+        <span style={{ color: 'rgba(180,33,243,0.4)', fontSize: 10 }}>|</span>
+        <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: 12 }}>
+          ₦ {neonCredits}
+        </span>
+        <button
+          onClick={() => setShowMarket(true)}
+          style={{
+            background:   'rgba(180,33,243,0.15)',
+            border:       '1px solid rgba(180,33,243,0.4)',
+            borderRadius: 6,
+            color:        '#B421F3',
+            fontSize:     10,
+            fontFamily:   'monospace',
+            padding:      '3px 10px',
+            cursor:       'pointer',
+            marginLeft:   4,
+          }}
+        >🛒 Market</button>
+      </div>
+
       <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
       <RoomInfo room={activeRoom} />
 
