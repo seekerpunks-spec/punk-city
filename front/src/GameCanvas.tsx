@@ -1537,9 +1537,9 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 // HUD
 // ─────────────────────────────────────────
 
-function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket }: {
+function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket, onOpenInventory }: {
   connected: boolean; roomName: string; playerCount: number; username: string
-  neonCredits: number; onOpenMarket: () => void
+  neonCredits: number; onOpenMarket: () => void; onOpenInventory: () => void
 }) {
   return (
     <div style={{
