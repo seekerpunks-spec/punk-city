@@ -68,7 +68,9 @@ interface Trade {
 const players               = new Map<string, Player>()
 const friendships           = new Map<string, Set<string>>()  // socketId → Set<friendId>
 const pendingFriendRequests = new Map<string, Set<string>>()  // targetId → Set<requesterId>
-const activeTrades          = new Map<string, Trade>()        // tradeId → Trade
+const activeTrades          = new Map<string, Trade>()
+const wallets               = new Map<string, number>()       // socketId → neonCredits
+const inventories           = new Map<string, string[]>()     // socketId → itemIds        // tradeId → Trade
 
 const rooms = new Map<string, Room>([
   ['genesis-plaza',    { id: 'genesis-plaza',    name: 'Genesis Plaza',    players: new Map(), history: [] }],
