@@ -236,7 +236,7 @@ export function useChat(options: UseChatOptions) {
 
     socket.on('trade:started', (data: { tradeId: string; partnerId: string; partnerUsername: string }) => {
       setTradeRequests(prev => prev.filter(r => r.fromId !== data.partnerId))
-      setActiveTrade({ tradeId: data.tradeId, partnerId: data.partnerId, partnerUsername: data.partnerUsername, myOffer: [], partnerOffer: [], myConfirmed: false, partnerConfirmed: false })
+      setActiveTrade({ tradeId: data.tradeId, partnerId: data.partnerId, partnerUsername: data.partnerUsername, myOffer: [], partnerOffer: [], myCredits: 0, partnerCredits: 0, myConfirmed: false, partnerConfirmed: false })
     })
 
     socket.on('trade:offer_updated', (data: { tradeId: string; offer: string[] }) => {
