@@ -576,6 +576,115 @@ function TradeWindow({
 }
 
 // ─────────────────────────────────────────
+// COMPOSANT — NEON MARKET SHOP
+// ─────────────────────────────────────────
+
+function NeonMarketShop({
+  catalog,
+  inventory,
+  neonCredits,
+  onBuy,
+  onClose,
+}: {
+  catalog:      ShopItem[]
+  inventory:    string[]
+  neonCredits:  number
+  onBuy:        (itemId: string) => void
+  onClose:      () => void
+}) {
+  return (
+    <div style={{
+      position:      'fixed', inset: 0,
+      background:    'rgba(0,0,0,0.7)',
+      display:       'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex:        4000,
+      backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        width:        520,
+        maxHeight:    '80vh',
+        background:   'rgba(10,10,20,0.98)',
+        border:       '1px solid rgba(180,33,243,0.6)',
+        borderRadius: 16,
+        fontFamily:   'monospace',
+        color:        '#ffffff',
+        boxShadow:    '0 0 48px rgba(180,33,243,0.3)',
+        display:      'flex', flexDirection: 'column',
+        overflow:     'hidden',
+      }}>
+        {/* Header */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 18px',
+          borderBottom: '1px solid rgba(180,33,243,0.3)',
+          background:   'rgba(180,33,243,0.08)',
+        }}>
+          <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
+            🛒 NEON MARKET
+          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: '#FFD700', fontSize: 12, fontWeight: 'bold' }}>
+              ₦ {neonCredits}
+            </span>
+            <button onClick={onClose} style={{
+              background: 'none', border: 'none', color: '#555',
+              cursor: 'pointer', fontSize: 16, padding: '0 4px',
+            }}>✕</button>
+          </div>
+        </div>
+
+        {/* Grid */}
+        <div style={{
+          display:             'grid',
+          gridTemplateColumns: 'repeat(2, 1fr)',
+          gap:                 12,
+          padding:             16,
+          overflowY:           'auto',
+        }}>
+          {catalog.map(item => {
+            const owned      = inventory.includes(item.id)
+            const canAfford  = neonCredits >= item.price
+            return (
+              <div key={item.id} style={{
+                background:   owned ? 'rgba(0,255,136,0.05)' : 'rgba(255,255,255,0.03)',
+                border:       `1px solid ${owned ? 'rgba(0,255,136,0.3)' : 'rgba(180,33,243,0.25)'}`,
+                borderRadius: 10,
+                padding:      '12px 14px',
+                display:      'flex', flexDirection: 'column', gap: 6,
+              }}>
+                <div style={{ fontSize: 22 }}>{item.icon}</div>
+                <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffffff' }}>{item.name}</div>
+                <div style={{ fontSize: 10, color: '#888', lineHeight: 1.4 }}>{item.description}</div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
+                  <span style={{ color: '#FFD700', fontSize: 11, fontWeight: 'bold' }}>₦ {item.price}</span>
+                  {owned ? (
+                    <span style={{ fontSize: 10, color: '#00ff88' }}>✓ Owned</span>
+                  ) : (
+                    <button
+                      onClick={() => onBuy(item.id)}
+                      disabled={!canAfford}
+                      style={{
+                        background:   canAfford ? 'rgba(180,33,243,0.2)' : 'rgba(255,255,255,0.05)',
+                        border:       `1px solid ${canAfford ? '#B421F3' : 'rgba(255,255,255,0.1)'}`,
+                        borderRadius: 6,
+                        color:        canAfford ? '#B421F3' : '#444',
+                        fontSize:     10, fontFamily: 'monospace',
+                        padding:      '4px 10px',
+                        cursor:       canAfford ? 'pointer' : 'not-allowed',
+                      }}
+                    >Buy</button>
+                  )}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
 // INNER GAME
 // ─────────────────────────────────────────
 
