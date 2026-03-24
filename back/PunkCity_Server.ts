@@ -18,6 +18,25 @@ interface Player {
   direction: string
 }
 
+interface ShopItem {
+  id:          string
+  name:        string
+  price:       number
+  description: string
+  icon:        string
+}
+
+const SHOP_CATALOG: ShopItem[] = [
+  { id: 'neon_lamp',       name: 'Neon Lamp',       price: 100, description: 'A glowing neon lamp for your apartment.',  icon: '💡' },
+  { id: 'purple_chair',    name: 'Purple Chair',    price: 150, description: 'A sleek purple chair.',                    icon: '🪑' },
+  { id: 'hologram_plant',  name: 'Hologram Plant',  price: 80,  description: 'A holographic decorative plant.',          icon: '🌿' },
+  { id: 'cyber_desk',      name: 'Cyber Desk',      price: 200, description: 'A high-tech cyber desk setup.',            icon: '🖥️' },
+  { id: 'neon_sign',       name: 'Neon Sign',       price: 120, description: 'Custom neon sign for your wall.',          icon: '🔆' },
+  { id: 'hover_shelf',     name: 'Hover Shelf',     price: 90,  description: 'A floating shelf, magnetically suspended.', icon: '📚' },
+]
+
+const STARTER_ITEMS = ['neon_lamp', 'purple_chair', 'hologram_plant']
+
 interface ChatMessage {
   id:        string
   playerId:  string
