@@ -415,6 +415,10 @@ export function useChat(options: UseChatOptions) {
     sendApartmentInvite,
     sendApartmentInviteToOne,
     dismissApartmentInvite,
+    neonCredits,
+    inventory,
+    shopCatalog,
+    buyItem,
   }
 }
 
