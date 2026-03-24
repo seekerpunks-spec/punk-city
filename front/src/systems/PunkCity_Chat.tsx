@@ -303,6 +303,11 @@ export function useChat(options: UseChatOptions) {
     setApartmentInvites(prev => prev.filter(i => i.fromId !== fromId))
   }, [])
 
+  // ── Shop ─────────────────────────────────
+  const buyItem = useCallback((itemId: string) => {
+    socketRef.current?.emit('shop:buy', { itemId })
+  }, [])
+
   // ── Amis ───────────────────────────────
   const sendFriendRequest = useCallback((targetId: string) => {
     console.log('[friend] sending request to', targetId, '— socket:', socketRef.current?.id)
