@@ -1333,9 +1333,20 @@ function InnerGame({
       {activeTrade && (
         <TradeWindow
           trade={activeTrade}
+          myInventory={inventory}
+          catalog={shopCatalog}
           onUpdateOffer={offer => updateTradeOffer(activeTrade.tradeId, offer)}
           onConfirm={() => confirmTrade(activeTrade.tradeId)}
           onCancel={() => cancelTrade(activeTrade.tradeId)}
+        />
+      )}
+
+      {/* Inventaire */}
+      {showInventory && (
+        <InventoryPanel
+          inventory={inventory}
+          catalog={shopCatalog}
+          onClose={() => setShowInventory(false)}
         />
       )}
 
