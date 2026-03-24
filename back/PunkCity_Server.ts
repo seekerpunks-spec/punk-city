@@ -453,6 +453,24 @@ io.on('connection', (socket: Socket) => {
     activeTrades.delete(data.tradeId)
   })
 
+  // ── Shop ─────────────────────────────────
+  socket.on('shop:buy', (data: { itemId: string }) => {
+    const item = SHOP_CATALOG.find(i => i.id === data.itemId)
+    if (!item) return
+    const credits   = wallets.get(socket.id) ?? 0
+    const inventory = inventories.get(socket.id) ?? []
+    if (credits < item.price) return socket.emit('shop:error', { message: 'Not enough Neon Credits.' })
+    if (inventory.includes(item.id)) return socket.emit('shop:error', { message: 'You already own this item.' })
+    wallets.set(socket.id, credits - item.price)
+    inventories.set(socket.id, [...inventory, item.id])
+    socket.emit('shop:purchased', {
+      itemId:      item.id,
+      neonCredits: wallets.get(socket.id)!,
+      inventory:   inventories.get(socket.id)!,
+    })
+    console.log(`[shop] ${players.get(socket.id)?.username} bought ${item.name} for ${item.price}₦`)
+  })
+
   socket.on('disconnect', () => {
     const player = players.get(socket.id)
     if (!player) return
