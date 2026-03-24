@@ -389,7 +389,7 @@ io.on('connection', (socket: Socket) => {
     if (!accepter || !requester) return
     const trade: Trade = {
       id: data.tradeId, playerAId: data.requesterId, playerBId: socket.id,
-      offerA: '', offerB: '', confirmedA: false, confirmedB: false,
+      offerA: [], offerB: [], confirmedA: false, confirmedB: false,
     }
     activeTrades.set(data.tradeId, trade)
     socket.emit('trade:started', { tradeId: data.tradeId, partnerId: data.requesterId, partnerUsername: requester.username })
