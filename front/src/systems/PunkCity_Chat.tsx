@@ -58,6 +58,14 @@ interface UseChatOptions {
   onPlayerMoved?: (data: { id: string; gridX: number; gridY: number; pixiX: number; pixiY: number; direction: string }) => void
 }
 
+export interface ShopItem {
+  id:          string
+  name:        string
+  price:       number
+  description: string
+  icon:        string
+}
+
 // ─────────────────────────────────────────
 // HOOK — CHAT SOCKET.IO
 // ─────────────────────────────────────────
