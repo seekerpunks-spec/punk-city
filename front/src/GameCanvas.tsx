@@ -1567,14 +1567,24 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
         </div>
         <div style={{ marginLeft: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
           <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: 11 }}>₦ {neonCredits}</span>
-          <button
-            onClick={onOpenMarket}
-            style={{
-              background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-              borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
-              padding: '2px 8px', cursor: 'pointer',
-            }}
-          >🛒 Market</button>
+          <div style={{ display: 'flex', gap: 4 }}>
+            <button
+              onClick={onOpenMarket}
+              style={{
+                background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+                borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
+                padding: '2px 8px', cursor: 'pointer',
+              }}
+            >🛒 Market</button>
+            <button
+              onClick={onOpenInventory}
+              style={{
+                background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+                borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
+                padding: '2px 8px', cursor: 'pointer',
+              }}
+            >🎒 Bag</button>
+          </div>
         </div>
       </div>
       {/* Row 2 : room + player count */}
