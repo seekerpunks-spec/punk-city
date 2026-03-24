@@ -61,6 +61,8 @@ interface Trade {
   playerBId:  string  // accepter
   offerA:     string[]  // item IDs
   offerB:     string[]
+  creditsA:   number    // ₦ offered by A
+  creditsB:   number
   confirmedA: boolean
   confirmedB: boolean
 }
