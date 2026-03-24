@@ -247,8 +247,9 @@ export function useChat(options: UseChatOptions) {
       setActiveTrade(prev => prev?.tradeId === data.tradeId ? { ...prev, partnerConfirmed: true } : prev)
     })
 
-    socket.on('trade:completed', (data: { tradeId: string; inventory: string[] }) => {
+    socket.on('trade:completed', (data: { tradeId: string; inventory: string[]; neonCredits: number }) => {
       setInventory(data.inventory)
+      setNeonCredits(data.neonCredits)
       setActiveTrade(null)
     })
 
