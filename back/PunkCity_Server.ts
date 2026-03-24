@@ -403,16 +403,20 @@ io.on('connection', (socket: Socket) => {
     io.to(data.requesterId).emit('trade:declined', { tradeId: data.tradeId, byUsername: decliner?.username ?? '???' })
   })
 
-  socket.on('trade:update_offer', (data: { tradeId: string; offer: string[] }) => {
+  socket.on('trade:update_offer', (data: { tradeId: string; offer: string[]; credits: number }) => {
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     const isA = trade.playerAId === socket.id
     if (!isA && trade.playerBId !== socket.id) return
-    const offer = data.offer.slice(0, 20)  // max 20 items par offre
-    if (isA) { trade.offerA = offer; trade.confirmedA = false; trade.confirmedB = false }
-    else      { trade.offerB = offer; trade.confirmedA = false; trade.confirmedB = false }
+    const offer   = data.offer.slice(0, 20)
+    const credits = Math.max(0, Math.floor(data.credits ?? 0))
+    // Validate credits don't exceed wallet
+    const wallet  = wallets.get(socket.id) ?? 0
+    if (credits > wallet) return socket.emit('shop:error', { message: 'Not enough Neon Credits to offer.' })
+    if (isA) { trade.offerA = offer; trade.creditsA = credits; trade.confirmedA = false; trade.confirmedB = false }
+    else      { trade.offerB = offer; trade.creditsB = credits; trade.confirmedA = false; trade.confirmedB = false }
     const partnerId = isA ? trade.playerBId : trade.playerAId
-    io.to(partnerId).emit('trade:offer_updated', { tradeId: data.tradeId, offer })
+    io.to(partnerId).emit('trade:offer_updated', { tradeId: data.tradeId, offer, credits })
   })
 
   socket.on('trade:confirm', (data: { tradeId: string }) => {
