@@ -500,6 +500,8 @@ io.on('connection', (socket: Socket) => {
         activeTrades.delete(tradeId)
       }
     })
+    wallets.delete(socket.id)
+    inventories.delete(socket.id)
     players.delete(socket.id)
     console.log(`[-] Disconnected: ${player.username}`)
   })
