@@ -1453,8 +1453,9 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 // HUD
 // ─────────────────────────────────────────
 
-function HUD({ connected, roomName, playerCount, username }: {
+function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket }: {
   connected: boolean; roomName: string; playerCount: number; username: string
+  neonCredits: number; onOpenMarket: () => void
 }) {
   return (
     <div style={{
@@ -1462,6 +1463,7 @@ function HUD({ connected, roomName, playerCount, username }: {
       display: 'flex', flexDirection: 'column', gap: 6,
       zIndex: 500, fontFamily: 'monospace',
     }}>
+      {/* Row 1 : avatar + username + credits */}
       <div style={{
         background: 'rgba(10,10,20,0.88)', border: '1px solid rgba(180,33,243,0.4)',
         borderRadius: 8, padding: '6px 12px', display: 'flex', alignItems: 'center',
@@ -1479,7 +1481,19 @@ function HUD({ connected, roomName, playerCount, username }: {
           <div style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>{username}</div>
           <div style={{ color: '#B421F3', fontSize: 9 }}>SeekerPunk OG</div>
         </div>
+        <div style={{ marginLeft: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
+          <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: 11 }}>₦ {neonCredits}</span>
+          <button
+            onClick={onOpenMarket}
+            style={{
+              background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+              borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
+              padding: '2px 8px', cursor: 'pointer',
+            }}
+          >🛒 Market</button>
+        </div>
       </div>
+      {/* Row 2 : room + player count */}
       <div style={{
         background: 'rgba(10,10,20,0.88)', border: '1px solid rgba(97,0,151,0.3)',
         borderRadius: 8, padding: '5px 12px', display: 'flex', alignItems: 'center',
