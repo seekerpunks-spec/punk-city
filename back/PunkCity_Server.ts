@@ -129,7 +129,7 @@ io.on('connection', (socket: Socket) => {
 
     // Wallet + inventory initiaux
     wallets.set(socket.id, 500)
-    inventories.set(socket.id, [...STARTER_ITEMS])
+    inventories.set(socket.id, [])
 
     // Crée l'appartement du joueur s'il n'existe pas encore
     const aptRoomId = `apartment_${player.username}`
