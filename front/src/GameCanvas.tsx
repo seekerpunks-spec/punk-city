@@ -602,6 +602,7 @@ function InnerGame({
     sendPM, dismissPMToast, markPMsRead,
     sendTradeRequest, acceptTrade, declineTrade,
     updateTradeOffer, confirmTrade, cancelTrade,
+    neonCredits, inventory, shopCatalog, buyItem,
   } = useChat({
     serverUrl:     config.serverUrl,
     username:      config.username,
