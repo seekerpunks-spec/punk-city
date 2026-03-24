@@ -130,6 +130,10 @@ io.on('connection', (socket: Socket) => {
     room.players.set(socket.id, player)
     socket.join(roomId)
 
+    // Wallet + inventory initiaux
+    wallets.set(socket.id, 500)
+    inventories.set(socket.id, [...STARTER_ITEMS])
+
     // Crée l'appartement du joueur s'il n'existe pas encore
     const aptRoomId = `apartment_${player.username}`
     if (!rooms.has(aptRoomId)) {
@@ -143,8 +147,11 @@ io.on('connection', (socket: Socket) => {
 
     socket.emit('player:joined', {
       player,
-      players: getPlayersInRoom(roomId),
-      history: room.history,
+      players:      getPlayersInRoom(roomId),
+      history:      room.history,
+      neonCredits:  wallets.get(socket.id)!,
+      inventory:    inventories.get(socket.id)!,
+      shopCatalog:  SHOP_CATALOG,
     })
 
     socket.to(roomId).emit('player:entered', player)
