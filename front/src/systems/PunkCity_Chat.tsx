@@ -432,6 +432,7 @@ export function useChat(options: UseChatOptions) {
     inventory,
     shopCatalog,
     buyItem,
+    openShop,
   }
 }
 
