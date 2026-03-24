@@ -314,7 +314,11 @@ export function useChat(options: UseChatOptions) {
 
   // ── Shop ─────────────────────────────────
   const buyItem = useCallback((itemId: string) => {
-    socketRef.current?.emit('shop:buy', { itemId })
+    socketRef.current?.emit('buy_item', { itemId })
+  }, [])
+
+  const openShop = useCallback(() => {
+    socketRef.current?.emit('get_shop')
   }, [])
 
   // ── Amis ───────────────────────────────
