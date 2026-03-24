@@ -7,7 +7,8 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Application, Container, Graphics, Sprite, Ticker, Assets } from 'pixi.js'
 import { AnimatedGIF } from '@pixi/gif'
 import { useMovement, isoToScreen, useCameraFollow } from './systems/PunkCity_Movement'
-import { useChat, ChatPanel, SocialPanel, ShopItem }   from './systems/PunkCity_Chat'
+import { useChat, ChatPanel, SocialPanel }             from './systems/PunkCity_Chat'
+import type { ShopItem }                               from './systems/PunkCity_Chat'
 import { useRoomSystem, Minimap, RoomInfo, RoomTransitionOverlay } from './systems/PunkCity_Rooms'
 
 interface GameConfig {
