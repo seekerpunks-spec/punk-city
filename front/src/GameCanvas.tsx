@@ -424,151 +424,223 @@ function PlayerPopup({
 // COMPOSANT — FENÊTRE DE TRADE (centré)
 // ─────────────────────────────────────────
 
+function ItemCard({ item, selected, onClick, dim }: {
+  item: ShopItem; selected: boolean; onClick?: () => void; dim?: boolean
+}) {
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background:   selected ? 'rgba(180,33,243,0.25)' : 'rgba(255,255,255,0.04)',
+        border:       `1px solid ${selected ? '#B421F3' : 'rgba(255,255,255,0.1)'}`,
+        borderRadius: 8,
+        padding:      '8px 10px',
+        cursor:       onClick ? 'pointer' : 'default',
+        opacity:      dim ? 0.45 : 1,
+        display:      'flex', alignItems: 'center', gap: 8,
+        userSelect:   'none',
+      }}
+    >
+      <span style={{ fontSize: 18 }}>{item.icon}</span>
+      <div>
+        <div style={{ fontSize: 10, fontWeight: 'bold', color: '#fff' }}>{item.name}</div>
+        <div style={{ fontSize: 9, color: '#FFD700' }}>₦ {item.price}</div>
+      </div>
+      {selected && <span style={{ marginLeft: 'auto', color: '#B421F3', fontSize: 12 }}>✓</span>}
+    </div>
+  )
+}
+
 function TradeWindow({
   trade,
+  myInventory,
+  catalog,
   onUpdateOffer,
   onConfirm,
   onCancel,
 }: {
   trade: {
-    tradeId:         string
-    partnerId:       string
-    partnerUsername: string
-    myOffer:         string
-    partnerOffer:    string
-    myConfirmed:     boolean
+    tradeId:          string
+    partnerId:        string
+    partnerUsername:  string
+    myOffer:          string[]
+    partnerOffer:     string[]
+    myConfirmed:      boolean
     partnerConfirmed: boolean
   }
-  onUpdateOffer: (offer: string) => void
+  myInventory:   string[]
+  catalog:       ShopItem[]
+  onUpdateOffer: (offer: string[]) => void
   onConfirm:     () => void
   onCancel:      () => void
 }) {
-  const [localOffer, setLocalOffer] = useState(trade.myOffer)
-
-  const handleOfferBlur = () => {
-    if (localOffer !== trade.myOffer) onUpdateOffer(localOffer)
-  }
-
+  const resolve = (id: string) => catalog.find(c => c.id === id)
   const bothConfirmed = trade.myConfirmed && trade.partnerConfirmed
+
+  const toggle = (itemId: string) => {
+    if (trade.myConfirmed) return
+    const next = trade.myOffer.includes(itemId)
+      ? trade.myOffer.filter(i => i !== itemId)
+      : [...trade.myOffer, itemId]
+    onUpdateOffer(next)
+  }
 
   return (
     <div style={{
-      position:      'fixed', inset: 0,
-      background:    'rgba(0,0,0,0.65)',
-      display:       'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex:        4000,
-      backdropFilter: 'blur(4px)',
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.65)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 4000, backdropFilter: 'blur(4px)',
     }}>
       <div style={{
-        width:        480,
-        background:   'rgba(10,10,20,0.98)',
-        border:       '1px solid rgba(180,33,243,0.6)',
-        borderRadius: 16,
-        fontFamily:   'monospace',
-        color:        '#ffffff',
-        boxShadow:    '0 0 48px rgba(180,33,243,0.3)',
-        overflow:     'hidden',
+        width: 520, maxHeight: '85vh',
+        background: 'rgba(10,10,20,0.98)',
+        border: '1px solid rgba(180,33,243,0.6)',
+        borderRadius: 16, fontFamily: 'monospace', color: '#fff',
+        boxShadow: '0 0 48px rgba(180,33,243,0.3)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         {/* Header */}
         <div style={{
-          display:        'flex', alignItems: 'center', justifyContent: 'space-between',
-          padding:        '12px 18px',
-          borderBottom:   '1px solid rgba(180,33,243,0.3)',
-          background:     'rgba(180,33,243,0.08)',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 18px', borderBottom: '1px solid rgba(180,33,243,0.3)',
+          background: 'rgba(180,33,243,0.08)',
         }}>
           <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
             🔄 TRADE — {trade.partnerUsername}
           </span>
-          <button onClick={onCancel} style={{
-            background: 'none', border: 'none', color: '#555',
-            cursor: 'pointer', fontSize: 16, padding: '0 4px',
-          }}>✕</button>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16 }}>✕</button>
         </div>
 
         {/* Two columns */}
-        <div style={{ display: 'flex', gap: 1, padding: '16px', paddingBottom: 12 }}>
+        <div style={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
           {/* My column */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, color: '#B421F3', fontWeight: 'bold', letterSpacing: 1, marginBottom: 2 }}>
-              VOUS {trade.myConfirmed && <span style={{ color: '#00ff88' }}>✓ CONFIRMÉ</span>}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 14, gap: 8, overflow: 'hidden' }}>
+            <div style={{ fontSize: 10, color: '#B421F3', fontWeight: 'bold', letterSpacing: 1 }}>
+              YOUR OFFER {trade.myConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
-            <textarea
-              value={localOffer}
-              onChange={e => setLocalOffer(e.target.value)}
-              onBlur={handleOfferBlur}
-              placeholder="Décrivez votre offre..."
-              maxLength={200}
-              disabled={trade.myConfirmed}
-              style={{
-                width:       '100%', height: 120,
-                background:  trade.myConfirmed ? 'rgba(180,33,243,0.05)' : 'rgba(255,255,255,0.05)',
-                border:      `1px solid ${trade.myConfirmed ? 'rgba(0,255,136,0.4)' : 'rgba(180,33,243,0.4)'}`,
-                borderRadius: 8,
-                color:       '#ffffff', padding: '8px',
-                fontSize:    11, fontFamily: 'monospace',
-                outline:     'none', resize: 'none',
-                boxSizing:   'border-box',
-                opacity:     trade.myConfirmed ? 0.7 : 1,
-              }}
-            />
+            <div style={{ fontSize: 9, color: '#666' }}>Click items to add / remove</div>
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {myInventory.length === 0 && (
+                <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Your inventory is empty.</div>
+              )}
+              {myInventory.map(id => {
+                const item = resolve(id)
+                if (!item) return null
+                const selected = trade.myOffer.includes(id)
+                return <ItemCard key={id} item={item} selected={selected} onClick={() => toggle(id)} dim={trade.myConfirmed && !selected} />
+              })}
+            </div>
           </div>
 
-          <div style={{ width: 1, background: 'rgba(180,33,243,0.2)', margin: '0 8px' }} />
+          <div style={{ width: 1, background: 'rgba(180,33,243,0.2)' }} />
 
           {/* Partner column */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ fontSize: 10, color: '#2986DF', fontWeight: 'bold', letterSpacing: 1, marginBottom: 2 }}>
-              {trade.partnerUsername.toUpperCase()} {trade.partnerConfirmed && <span style={{ color: '#00ff88' }}>✓ CONFIRMÉ</span>}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', padding: 14, gap: 8, overflow: 'hidden' }}>
+            <div style={{ fontSize: 10, color: '#2986DF', fontWeight: 'bold', letterSpacing: 1 }}>
+              {trade.partnerUsername.toUpperCase()} OFFERS {trade.partnerConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
-            <div style={{
-              height:       120,
-              background:   'rgba(41,134,223,0.05)',
-              border:       `1px solid ${trade.partnerConfirmed ? 'rgba(0,255,136,0.4)' : 'rgba(41,134,223,0.3)'}`,
-              borderRadius: 8,
-              padding:      '8px',
-              fontSize:     11,
-              color:        trade.partnerOffer ? '#ffffff' : '#444',
-              overflowY:    'auto',
-              whiteSpace:   'pre-wrap',
-              wordBreak:    'break-word',
-            }}>
-              {trade.partnerOffer || 'En attente...'}
+            <div style={{ fontSize: 9, color: '#666' }}>Their selection</div>
+            <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {trade.partnerOffer.length === 0 && (
+                <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Waiting for offer...</div>
+              )}
+              {trade.partnerOffer.map(id => {
+                const item = resolve(id)
+                if (!item) return null
+                return <ItemCard key={id} item={item} selected={true} />
+              })}
             </div>
           </div>
         </div>
 
         {/* Actions */}
-        <div style={{
-          display: 'flex', gap: 8, padding: '0 16px 16px',
-        }}>
+        <div style={{ display: 'flex', gap: 8, padding: '12px 16px', borderTop: '1px solid rgba(180,33,243,0.15)' }}>
           {!trade.myConfirmed && (
             <button
-              onClick={() => { if (localOffer !== trade.myOffer) onUpdateOffer(localOffer); onConfirm() }}
+              onClick={onConfirm}
               style={{
                 flex: 1, background: 'rgba(0,255,136,0.15)', border: '1px solid #00ff88',
                 borderRadius: 8, color: '#00ff88', fontSize: 11, fontFamily: 'monospace',
                 padding: '8px 0', cursor: 'pointer', fontWeight: 'bold',
               }}
-            >✓ Confirmer</button>
+            >✓ Lock Offer</button>
           )}
           {trade.myConfirmed && !bothConfirmed && (
-            <div style={{
-              flex: 1, textAlign: 'center', fontSize: 11, color: '#00ff88',
-              padding: '8px 0', letterSpacing: 1,
-            }}>
-              ✓ En attente de {trade.partnerUsername}...
+            <div style={{ flex: 1, textAlign: 'center', fontSize: 11, color: '#00ff88', padding: '8px 0' }}>
+              ✓ Waiting for {trade.partnerUsername}...
             </div>
           )}
           <button
             onClick={onCancel}
             style={{
-              flex: trade.myConfirmed ? 1 : undefined,
-              minWidth: 80,
+              flex: trade.myConfirmed ? 1 : undefined, minWidth: 80,
               background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
               borderRadius: 8, color: '#ff4444', fontSize: 11, fontFamily: 'monospace',
               padding: '8px 0', cursor: 'pointer',
             }}
-          >✕ Annuler</button>
+          >✕ Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────
+// COMPOSANT — INVENTORY PANEL
+// ─────────────────────────────────────────
+
+function InventoryPanel({ inventory, catalog, onClose }: {
+  inventory: string[]
+  catalog:   ShopItem[]
+  onClose:   () => void
+}) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'rgba(0,0,0,0.65)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      zIndex: 4000, backdropFilter: 'blur(4px)',
+    }}>
+      <div style={{
+        width: 440, maxHeight: '75vh',
+        background: 'rgba(10,10,20,0.98)',
+        border: '1px solid rgba(180,33,243,0.6)',
+        borderRadius: 16, fontFamily: 'monospace', color: '#fff',
+        boxShadow: '0 0 48px rgba(180,33,243,0.3)',
+        display: 'flex', flexDirection: 'column', overflow: 'hidden',
+      }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '12px 18px', borderBottom: '1px solid rgba(180,33,243,0.3)',
+          background: 'rgba(180,33,243,0.08)',
+        }}>
+          <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
+            🎒 INVENTORY
+          </span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16 }}>✕</button>
+        </div>
+
+        <div style={{ padding: 16, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {inventory.length === 0 && (
+            <div style={{ gridColumn: '1/-1', color: '#555', fontSize: 11, textAlign: 'center', padding: '24px 0' }}>
+              Your inventory is empty. Visit the Market to buy items.
+            </div>
+          )}
+          {inventory.map(id => {
+            const item = catalog.find(c => c.id === id)
+            if (!item) return null
+            return (
+              <div key={id} style={{
+                background: 'rgba(180,33,243,0.08)', border: '1px solid rgba(180,33,243,0.25)',
+                borderRadius: 10, padding: '12px 14px',
+              }}>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{item.icon}</div>
+                <div style={{ fontSize: 11, fontWeight: 'bold' }}>{item.name}</div>
+                <div style={{ fontSize: 9, color: '#888', marginTop: 3 }}>{item.description}</div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </div>
