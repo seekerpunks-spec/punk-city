@@ -90,8 +90,8 @@ export function useChat(options: UseChatOptions) {
     tradeId:         string
     partnerId:       string
     partnerUsername: string
-    myOffer:         string
-    partnerOffer:    string
+    myOffer:         string[]
+    partnerOffer:    string[]
     myConfirmed:     boolean
     partnerConfirmed: boolean
   } | null>(null)
