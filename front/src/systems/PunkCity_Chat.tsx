@@ -87,13 +87,15 @@ export function useChat(options: UseChatOptions) {
   const [inventory,        setInventory]        = useState<string[]>([])
   const [shopCatalog,      setShopCatalog]      = useState<ShopItem[]>([])
   const [activeTrade,      setActiveTrade]      = useState<{
-    tradeId:         string
-    partnerId:       string
-    partnerUsername: string
-    myOffer:         string[]
-    partnerOffer:    string[]
-    myConfirmed:     boolean
-    partnerConfirmed: boolean
+    tradeId:           string
+    partnerId:         string
+    partnerUsername:   string
+    myOffer:           string[]
+    partnerOffer:      string[]
+    myCredits:         number
+    partnerCredits:    number
+    myConfirmed:       boolean
+    partnerConfirmed:  boolean
   } | null>(null)
 
   // Ref stable vers le callback — se met à jour sans recréer la connexion socket
