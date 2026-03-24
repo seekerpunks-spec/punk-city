@@ -355,9 +355,9 @@ export function useChat(options: UseChatOptions) {
     setTradeRequests(prev => prev.filter(r => r.tradeId !== tradeId))
   }, [])
 
-  const updateTradeOffer = useCallback((tradeId: string, offer: string[]) => {
-    socketRef.current?.emit('trade:update_offer', { tradeId, offer })
-    setActiveTrade(prev => prev?.tradeId === tradeId ? { ...prev, myOffer: offer, myConfirmed: false } : prev)
+  const updateTradeOffer = useCallback((tradeId: string, offer: string[], credits: number) => {
+    socketRef.current?.emit('trade:update_offer', { tradeId, offer, credits })
+    setActiveTrade(prev => prev?.tradeId === tradeId ? { ...prev, myOffer: offer, myCredits: credits, myConfirmed: false } : prev)
   }, [])
 
   const confirmTrade = useCallback((tradeId: string) => {
