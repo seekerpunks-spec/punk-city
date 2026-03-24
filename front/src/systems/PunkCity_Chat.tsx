@@ -59,11 +59,10 @@ interface UseChatOptions {
 }
 
 export interface ShopItem {
-  id:          string
-  name:        string
-  price:       number
-  description: string
-  icon:        string
+  id:    string
+  name:  string
+  price: number
+  emoji: string
 }
 
 // ─────────────────────────────────────────
