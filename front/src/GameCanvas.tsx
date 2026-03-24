@@ -532,6 +532,23 @@ function TradeWindow({
               YOUR OFFER {trade.myConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
             <div style={{ fontSize: 9, color: '#666' }}>Click items to add / remove</div>
+            {/* Credits offer */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: '#FFD700', fontSize: 10 }}>₦</span>
+              <input
+                type="number" min={0} max={myBalance}
+                value={creditsInput}
+                disabled={trade.myConfirmed}
+                onChange={e => handleCreditsChange(Number(e.target.value))}
+                style={{
+                  width: 80, background: 'rgba(255,215,0,0.08)',
+                  border: `1px solid ${trade.myConfirmed ? 'rgba(0,255,136,0.4)' : 'rgba(255,215,0,0.4)'}`,
+                  borderRadius: 6, color: '#FFD700', fontSize: 11,
+                  fontFamily: 'monospace', padding: '3px 8px', outline: 'none',
+                }}
+              />
+              <span style={{ color: '#555', fontSize: 9 }}>/ ₦{myBalance}</span>
+            </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
               {myInventory.length === 0 && (
                 <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Your inventory is empty.</div>
