@@ -143,12 +143,18 @@ export function useChat(options: UseChatOptions) {
       setShopCatalog(data.shopCatalog ?? [])
     })
 
-    socket.on('shop:purchased', (data: { itemId: string; neonCredits: number; inventory: string[] }) => {
+    socket.on('shop_data', (data: { items: ShopItem[]; neonCredits: number; inventory: string[] }) => {
+      setShopCatalog(data.items)
       setNeonCredits(data.neonCredits)
       setInventory(data.inventory)
     })
 
-    socket.on('shop:error', (_data: { message: string }) => {})
+    socket.on('buy_item_success', (data: { itemId: string; neonCredits: number; inventory: string[] }) => {
+      setNeonCredits(data.neonCredits)
+      setInventory(data.inventory)
+    })
+
+    socket.on('buy_item_error', (_data: { message: string }) => {})
 
     // Nouveau message
     socket.on('chat:message', (msg: ChatMessage) => {
