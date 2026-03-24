@@ -441,7 +441,7 @@ function ItemCard({ item, selected, onClick, dim }: {
         userSelect:   'none',
       }}
     >
-      <span style={{ fontSize: 18 }}>{item.icon}</span>
+      <span style={{ fontSize: 18 }}>{item.emoji}</span>
       <div>
         <div style={{ fontSize: 10, fontWeight: 'bold', color: '#fff' }}>{item.name}</div>
         <div style={{ fontSize: 9, color: '#FFD700' }}>₦ {item.price}</div>
@@ -671,7 +671,7 @@ function InventoryPanel({ inventory, catalog, onClose }: {
                 background: 'rgba(180,33,243,0.08)', border: '1px solid rgba(180,33,243,0.25)',
                 borderRadius: 10, padding: '12px 14px',
               }}>
-                <div style={{ fontSize: 22, marginBottom: 6 }}>{item.icon}</div>
+                <div style={{ fontSize: 22, marginBottom: 6 }}>{item.emoji}</div>
                 <div style={{ fontSize: 11, fontWeight: 'bold' }}>{item.name}</div>
                 <div style={{ fontSize: 9, color: '#888', marginTop: 3 }}>{item.description}</div>
               </div>
@@ -760,7 +760,7 @@ function NeonMarketShop({
                 padding:      '12px 14px',
                 display:      'flex', flexDirection: 'column', gap: 6,
               }}>
-                <div style={{ fontSize: 22 }}>{item.icon}</div>
+                <div style={{ fontSize: 22 }}>{item.emoji}</div>
                 <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffffff' }}>{item.name}</div>
                 <div style={{ fontSize: 10, color: '#888', lineHeight: 1.4 }}>{item.description}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
