@@ -127,14 +127,27 @@ export function useChat(options: UseChatOptions) {
 
     // Données initiales à l'arrivée dans la room
     socket.on('player:joined', (data: {
-      player:  Player
-      players: Player[]
-      history: ChatMessage[]
+      player:      Player
+      players:     Player[]
+      history:     ChatMessage[]
+      neonCredits: number
+      inventory:   string[]
+      shopCatalog: ShopItem[]
     }) => {
       setMyPlayer(data.player)
       setPlayers(data.players)
       setMessages(data.history)
+      setNeonCredits(data.neonCredits ?? 500)
+      setInventory(data.inventory ?? [])
+      setShopCatalog(data.shopCatalog ?? [])
     })
+
+    socket.on('shop:purchased', (data: { itemId: string; neonCredits: number; inventory: string[] }) => {
+      setNeonCredits(data.neonCredits)
+      setInventory(data.inventory)
+    })
+
+    socket.on('shop:error', (_data: { message: string }) => {})
 
     // Nouveau message
     socket.on('chat:message', (msg: ChatMessage) => {
