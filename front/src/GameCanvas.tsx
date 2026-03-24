@@ -1381,6 +1381,17 @@ function InnerGame({
 
       <RoomTransitionOverlay transitioning={transitioning} />
       <HUD connected={connected} roomName={activeRoom?.name ?? ''} playerCount={players.length} username={config.username} />
+
+      {/* Neon Market Shop */}
+      {showMarket && (
+        <NeonMarketShop
+          catalog={shopCatalog}
+          inventory={inventory}
+          neonCredits={neonCredits}
+          onBuy={itemId => buyItem(itemId)}
+          onClose={() => setShowMarket(false)}
+        />
+      )}
     </>
   )
 }
