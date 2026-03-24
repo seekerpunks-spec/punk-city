@@ -570,8 +570,15 @@ function TradeWindow({
               {trade.partnerUsername.toUpperCase()} OFFERS {trade.partnerConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
             <div style={{ fontSize: 9, color: '#666' }}>Their selection</div>
+            {/* Partner credits */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: '#FFD700', fontSize: 10 }}>₦</span>
+              <span style={{ color: '#FFD700', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                {trade.partnerCredits > 0 ? trade.partnerCredits : '—'}
+              </span>
+            </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {trade.partnerOffer.length === 0 && (
+              {trade.partnerOffer.length === 0 && trade.partnerCredits === 0 && (
                 <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Waiting for offer...</div>
               )}
               {trade.partnerOffer.map(id => {
