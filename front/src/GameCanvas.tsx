@@ -1050,6 +1050,9 @@ function InnerGame({
     return () => clearTimeout(timer)
   }, [messages, myPlayer])
 
+  // ── Shop ─────────────────────────────────
+  const [showMarket, setShowMarket] = useState(false)
+
   // ── Popup joueur au clic ─────────────────
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; username: string } | null>(null)
   const [pmTarget,       setPmTarget]       = useState<{ id: string; username: string } | null>(null)
