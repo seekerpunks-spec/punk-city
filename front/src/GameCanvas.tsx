@@ -1443,8 +1443,9 @@ function InnerGame({
         <TradeWindow
           trade={activeTrade}
           myInventory={inventory}
+          myBalance={neonCredits}
           catalog={shopCatalog}
-          onUpdateOffer={offer => updateTradeOffer(activeTrade.tradeId, offer)}
+          onUpdateOffer={(offer, credits) => updateTradeOffer(activeTrade.tradeId, offer, credits)}
           onConfirm={() => confirmTrade(activeTrade.tradeId)}
           onCancel={() => cancelTrade(activeTrade.tradeId)}
         />
