@@ -83,6 +83,9 @@ export function useChat(options: UseChatOptions) {
   const [pmToasts,         setPmToasts]         = useState<{ id: string; fromId: string; fromUsername: string; text: string }[]>([])
   const [tradeRequests,    setTradeRequests]    = useState<{ tradeId: string; fromId: string; fromUsername: string }[]>([])
   const [apartmentInvites, setApartmentInvites] = useState<{ fromId: string; fromUsername: string; roomId: string }[]>([])
+  const [neonCredits,      setNeonCredits]      = useState<number>(500)
+  const [inventory,        setInventory]        = useState<string[]>([])
+  const [shopCatalog,      setShopCatalog]      = useState<ShopItem[]>([])
   const [activeTrade,      setActiveTrade]      = useState<{
     tradeId:         string
     partnerId:       string
