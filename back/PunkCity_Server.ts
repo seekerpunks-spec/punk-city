@@ -401,12 +401,12 @@ io.on('connection', (socket: Socket) => {
     io.to(data.requesterId).emit('trade:declined', { tradeId: data.tradeId, byUsername: decliner?.username ?? '???' })
   })
 
-  socket.on('trade:update_offer', (data: { tradeId: string; offer: string }) => {
+  socket.on('trade:update_offer', (data: { tradeId: string; offer: string[] }) => {
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     const isA = trade.playerAId === socket.id
     if (!isA && trade.playerBId !== socket.id) return
-    const offer = data.offer.slice(0, 200)
+    const offer = data.offer.slice(0, 20)  // max 20 items par offre
     if (isA) { trade.offerA = offer; trade.confirmedA = false; trade.confirmedB = false }
     else      { trade.offerB = offer; trade.confirmedA = false; trade.confirmedB = false }
     const partnerId = isA ? trade.playerBId : trade.playerAId
