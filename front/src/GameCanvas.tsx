@@ -1526,7 +1526,7 @@ function InnerGame({
       )}
 
       <RoomTransitionOverlay transitioning={transitioning} />
-      <HUD connected={connected} roomName={activeRoom?.name ?? ''} playerCount={players.length} username={config.username} neonCredits={neonCredits} onOpenMarket={() => { openShop(); setShowMarket(true) }} onOpenInventory={() => setShowInventory(true)} />
+      <HUD connected={connected} roomName={activeRoom?.name ?? ''} playerCount={players.length} username={config.username} neonCredits={neonCredits} onOpenMarket={() => { openShop(); setShowMarket(true) }} onOpenInventory={() => setShowInventory(true)} isMobile={isMobile} />
 
       {/* Neon Market Shop */}
       {showMarket && (
