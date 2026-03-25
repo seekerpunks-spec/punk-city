@@ -423,8 +423,6 @@ io.on('connection', (socket: Socket) => {
     const partnerId = isA ? trade.playerBId : trade.playerAId
     io.to(partnerId).emit('trade:partner_confirmed', { tradeId: data.tradeId })
     if (trade.confirmedA && trade.confirmedB) {
-      const playerA = players.get(trade.playerAId)
-      const playerB = players.get(trade.playerBId)
 
       // Validate both players still have enough credits
       const walA = wallets.get(trade.playerAId) ?? 0
