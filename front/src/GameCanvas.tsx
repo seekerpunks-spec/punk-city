@@ -471,8 +471,8 @@ function TradeWindow({
     myConfirmed:       boolean
     partnerConfirmed:  boolean
     partnerInventory:  string[]
+    myInventory:       string[]
   }
-  myInventory:   string[]
   myBalance:     number
   catalog:       ShopItem[]
   onUpdateOffer: (offer: string[], credits: number) => void
