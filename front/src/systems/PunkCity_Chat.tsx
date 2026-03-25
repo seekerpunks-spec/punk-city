@@ -580,6 +580,7 @@ export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote, st
       backdropFilter: 'blur(8px)',
       boxShadow:      '0 0 24px rgba(97,0,151,0.3)',
       userSelect:     'none',
+      ...style,
     }}>
       {/* Header */}
       <div style={{
