@@ -1730,7 +1730,7 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
           <div style={{ color: '#a0a0c0', fontSize: 10 }}>{roomName}</div>
           <div style={{ color: '#555', fontSize: 9 }}>{playerCount} player{playerCount > 1 ? 's' : ''} online</div>
         </div>
-      </div>
+      </div>}
     </div>
   )
 }
