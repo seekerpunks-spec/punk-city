@@ -1636,18 +1636,22 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 }
 
 // ─────────────────────────────────────────
-// HOOK — DÉTECTION MOBILE
+// HOOK — DÉTECTION MOBILE / ORIENTATION
 // ─────────────────────────────────────────
 
-function useIsMobile() {
-  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches)
+function useMobileOrientation() {
+  const get = () => ({
+    isLandscapeMobile: window.innerHeight < 500 && window.innerWidth < 1024,
+    isPortraitMobile:  window.innerWidth < window.innerHeight && window.innerWidth < 1024,
+  })
+  const [state, setState] = useState(get)
   useEffect(() => {
-    const mq = window.matchMedia('(max-width: 767px)')
-    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
-    mq.addEventListener('change', handler)
-    return () => mq.removeEventListener('change', handler)
+    const h = () => setState(get())
+    window.addEventListener('resize', h)
+    window.addEventListener('orientationchange', h)
+    return () => { window.removeEventListener('resize', h); window.removeEventListener('orientationchange', h) }
   }, [])
-  return isMobile
+  return state
 }
 
 // ─────────────────────────────────────────
