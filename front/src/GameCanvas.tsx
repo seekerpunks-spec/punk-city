@@ -1163,6 +1163,10 @@ function InnerGame({
   const [showMarket,    setShowMarket]    = useState(false)
   const [showInventory, setShowInventory] = useState(false)
 
+  // ── Mobile ───────────────────────────────
+  const isMobile = useIsMobile()
+  const [mobilePanel, setMobilePanel] = useState<'chat' | 'social' | null>(null)
+
   // ── Popup joueur au clic ─────────────────
   const [selectedPlayer, setSelectedPlayer] = useState<{ id: string; username: string } | null>(null)
   const [pmTarget,       setPmTarget]       = useState<{ id: string; username: string } | null>(null)
