@@ -603,7 +603,7 @@ export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote, st
 
       {/* Messages */}
       <div style={{
-        height: 200, overflowY: 'auto',
+        height: compact ? 120 : 200, overflowY: 'auto',
         padding: '8px 12px',
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', gap: 4,
         scrollbarWidth: 'thin', scrollbarColor: '#610097 transparent',
