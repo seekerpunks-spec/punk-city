@@ -453,7 +453,6 @@ function ItemCard({ item, selected, onClick, dim }: {
 
 function TradeWindow({
   trade,
-  myInventory,
   myBalance,
   catalog,
   onUpdateOffer,
