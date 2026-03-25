@@ -1194,14 +1194,14 @@ function InnerGame({
   return (
     <>
       {/* Minimap desktop / Burger mobile */}
-      {isMobile
+      {isLandscapeMobile
         ? <MobileBurgerMenu activeRoomId={activeRoomId} onRoomClick={loadRoom} />
         : <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
       }
       <RoomInfo room={activeRoom} />
 
       {/* Chat + Social — desktop : fixed corners ; mobile : icônes flottantes en bas */}
-      {isMobile ? (
+      {isLandscapeMobile ? (
         <>
           {/* Backdrop overlay */}
           {mobilePanel && (
