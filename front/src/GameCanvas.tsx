@@ -535,7 +535,7 @@ function TradeWindow({
               <span style={{ color: '#FFD700', fontSize: 10 }}>₦ Credits to offer:</span>
               <input
                 type="number" min={0} max={myBalance}
-                value={creditsInput}
+                value={trade.myCredits}
                 disabled={trade.myConfirmed}
                 onChange={e => handleCreditsChange(Number(e.target.value))}
                 style={{
