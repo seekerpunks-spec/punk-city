@@ -531,10 +531,9 @@ function TradeWindow({
             <div style={{ fontSize: 10, color: '#B421F3', fontWeight: 'bold', letterSpacing: 1 }}>
               YOUR OFFER {trade.myConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
-            <div style={{ fontSize: 9, color: '#666' }}>Click items to add / remove</div>
             {/* Credits offer */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#FFD700', fontSize: 10 }}>₦</span>
+              <span style={{ color: '#FFD700', fontSize: 10 }}>₦ Credits to offer:</span>
               <input
                 type="number" min={0} max={myBalance}
                 value={creditsInput}
