@@ -737,6 +737,7 @@ export function SocialPanel({
       backdropFilter: 'blur(8px)',
       boxShadow:      '0 0 24px rgba(97,0,151,0.3)',
       userSelect:     'none',
+      ...style,
     }}>
 
       {/* Tabs header */}
