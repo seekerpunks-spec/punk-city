@@ -470,7 +470,7 @@ function TradeWindow({
     myConfirmed:       boolean
     partnerConfirmed:  boolean
     partnerInventory:  string[]
-    trade.myInventory:       string[]
+    myInventory:       string[]
   }
   myBalance:     number
   catalog:       ShopItem[]
