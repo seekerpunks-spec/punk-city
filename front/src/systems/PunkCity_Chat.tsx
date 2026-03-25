@@ -247,9 +247,7 @@ export function useChat(options: UseChatOptions) {
     })
 
     socket.on('trade:offer_updated', (data: { tradeId: string; offer: string[]; credits: number }) => {
-      console.log('[trade:offer_updated] received', data)
       setActiveTrade(prev => {
-        console.log('[trade:offer_updated] prev tradeId=', prev?.tradeId, 'data tradeId=', data.tradeId, 'match=', prev?.tradeId === data.tradeId)
         return prev?.tradeId === data.tradeId ? { ...prev, partnerOffer: data.offer, partnerCredits: data.credits ?? 0, myConfirmed: false, partnerConfirmed: false } : prev
       })
     })
