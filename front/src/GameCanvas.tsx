@@ -485,7 +485,7 @@ function TradeWindow({
   onConfirm:     () => void
   onCancel:      () => void
 }) {
-  const resolve = (id: string) => catalog.find(c => c.id === id)
+  const resolve = (id: string) => catalog.find(c => c.id === id) ?? STATIC_CATALOG.find(c => c.id === id)
   const bothConfirmed = trade.myConfirmed && trade.partnerConfirmed
 
   const toggle = (itemId: string) => {
