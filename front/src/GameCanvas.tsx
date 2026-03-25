@@ -1572,12 +1572,28 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 }
 
 // ─────────────────────────────────────────
+// HOOK — DÉTECTION MOBILE
+// ─────────────────────────────────────────
+
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => window.matchMedia('(max-width: 767px)').matches)
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)')
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+  return isMobile
+}
+
+// ─────────────────────────────────────────
 // HUD
 // ─────────────────────────────────────────
 
-function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket, onOpenInventory }: {
+function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket, onOpenInventory, isMobile }: {
   connected: boolean; roomName: string; playerCount: number; username: string
   neonCredits: number; onOpenMarket: () => void; onOpenInventory: () => void
+  isMobile?: boolean
 }) {
   return (
     <div style={{
