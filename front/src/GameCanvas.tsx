@@ -1422,12 +1422,12 @@ function InnerGame({
                 flex: 1, background: 'rgba(180,33,243,0.15)', border: '1px solid #B421F3',
                 borderRadius: 6, color: '#B421F3', fontSize: 10, fontFamily: 'monospace',
                 padding: '3px 0', cursor: 'pointer',
-              }}>✓ Accepter</button>
+              }}>✓ Accept</button>
               <button onClick={() => declineTrade(req.tradeId, req.fromId)} style={{
                 flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
                 borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
                 padding: '3px 0', cursor: 'pointer',
-              }}>✕ Refuser</button>
+              }}>✕ Decline</button>
             </div>
           </div>
         ))}
