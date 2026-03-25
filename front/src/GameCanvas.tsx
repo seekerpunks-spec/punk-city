@@ -1626,18 +1626,22 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
               onClick={onOpenMarket}
               style={{
                 background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
-                padding: '2px 8px', cursor: 'pointer',
+                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'pointer',
+                minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
+                fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
-            >🛒 Market</button>
+            >{isMobile ? '🛒' : '🛒 Market'}</button>
             <button
               onClick={onOpenInventory}
               style={{
                 background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontSize: 9, fontFamily: 'monospace',
-                padding: '2px 8px', cursor: 'pointer',
+                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'pointer',
+                minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
+                fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
               }}
-            >🎒 Bag</button>
+            >{isMobile ? '👜' : '🎒 Bag'}</button>
           </div>
         </div>
       </div>
