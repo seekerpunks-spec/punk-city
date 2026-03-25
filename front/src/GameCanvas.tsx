@@ -1217,6 +1217,7 @@ function InnerGame({
               connected={connected}
               onSend={sendMessage}
               onEmote={sendEmote}
+              compact
               style={{ bottom: 80, left: 8, right: 8, width: 'auto', zIndex: 1999 }}
             />
           )}
@@ -1233,6 +1234,7 @@ function InnerGame({
               onSelectPlayer={p => setSelectedPlayer(p)}
               inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
               onInviteToApartment={sendApartmentInviteToOne}
+              compact
               style={{ bottom: 80, left: 8, right: 8, width: 'auto', zIndex: 1999 }}
             />
           )}
