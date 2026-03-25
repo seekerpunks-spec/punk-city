@@ -583,8 +583,7 @@ function TradeWindow({
                 <div style={{ color: '#555', fontSize: 10, padding: '4px 0', fontStyle: 'italic' }}>Waiting for offer...</div>
               )}
               {trade.partnerOffer.map(id => {
-                const item = resolve(id)
-                if (!item) return null
+                const item = resolve(id) ?? { id, name: id, emoji: '📦', price: 0 }
                 return <ItemCard key={id} item={item} selected={true} dim={false} />
               })}
             </div>
