@@ -1388,7 +1388,7 @@ function InnerGame({
                   borderRadius: 6, color: '#ffaa00', fontSize: 10, fontFamily: 'monospace',
                   padding: '3px 0', cursor: 'pointer',
                 }}
-              >✓ Accepter</button>
+              >✓ Accept</button>
               <button
                 onClick={() => dismissApartmentInvite(inv.fromId)}
                 style={{
@@ -1396,7 +1396,7 @@ function InnerGame({
                   borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
                   padding: '3px 0', cursor: 'pointer',
                 }}
-              >✕ Refuser</button>
+              >✕ Decline</button>
             </div>
           </div>
         ))}
