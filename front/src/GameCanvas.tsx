@@ -569,17 +569,21 @@ function TradeWindow({
             <div style={{ fontSize: 10, color: '#2986DF', fontWeight: 'bold', letterSpacing: 1 }}>
               {trade.partnerUsername.toUpperCase()} OFFERS {trade.partnerConfirmed && <span style={{ color: '#00ff88' }}>✓ LOCKED</span>}
             </div>
-            <div style={{ fontSize: 9, color: '#666' }}>Their selection</div>
-            {/* Partner credits */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#FFD700', fontSize: 10 }}>₦</span>
-              <span style={{ color: '#FFD700', fontSize: 11, fontFamily: 'monospace', fontWeight: 'bold' }}>
-                {trade.partnerCredits > 0 ? trade.partnerCredits : '—'}
+            {/* Partner credits — live */}
+            <div style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'rgba(255,215,0,0.06)', border: '1px solid rgba(255,215,0,0.2)',
+              borderRadius: 6, padding: '4px 8px',
+            }}>
+              <span style={{ color: '#FFD700', fontSize: 10 }}>₦ Credits offered:</span>
+              <span style={{ color: '#FFD700', fontSize: 12, fontFamily: 'monospace', fontWeight: 'bold' }}>
+                {trade.partnerCredits}
               </span>
             </div>
+            {/* Partner items — live */}
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {trade.partnerOffer.length === 0 && trade.partnerCredits === 0 && (
-                <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Waiting for offer...</div>
+              {trade.partnerOffer.length === 0 && (
+                <div style={{ color: '#444', fontSize: 10, padding: '4px 0' }}>No items offered yet…</div>
               )}
               {trade.partnerOffer.map(id => {
                 const item = resolve(id)
