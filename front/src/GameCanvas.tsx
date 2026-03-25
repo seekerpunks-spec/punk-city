@@ -1415,7 +1415,7 @@ function InnerGame({
             minWidth:      220,
           }}>
             <div style={{ fontSize: 11, color: '#B421F3', marginBottom: 6 }}>
-              🔄 <b>{req.fromUsername}</b> vous propose un trade
+              🔄 <b>{req.fromUsername}</b> wants to trade with you
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button onClick={() => acceptTrade(req.tradeId, req.fromId)} style={{
