@@ -577,16 +577,15 @@ function TradeWindow({
                 {trade.partnerCredits}
               </span>
             </div>
-            {/* Partner inventory — full list, selected items highlighted in real-time */}
+            {/* Partner offer — only items they have selected */}
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {trade.partnerInventory.length === 0 && (
-                <div style={{ color: '#444', fontSize: 10, padding: '4px 0' }}>Partner has no items.</div>
+              {trade.partnerOffer.length === 0 && (
+                <div style={{ color: '#555', fontSize: 10, padding: '4px 0', fontStyle: 'italic' }}>Waiting for offer...</div>
               )}
-              {trade.partnerInventory.map(id => {
+              {trade.partnerOffer.map(id => {
                 const item = resolve(id)
                 if (!item) return null
-                const selected = trade.partnerOffer.includes(id)
-                return <ItemCard key={id} item={item} selected={selected} dim={trade.partnerConfirmed && !selected} />
+                return <ItemCard key={id} item={item} selected={true} dim={false} />
               })}
             </div>
           </div>
