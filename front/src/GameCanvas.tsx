@@ -431,8 +431,8 @@ function PlayerPopup({
 // COMPOSANT — FENÊTRE DE TRADE (centré)
 // ─────────────────────────────────────────
 
-function ItemCard({ item, selected, onClick, dim }: {
-  item: ShopItem; selected: boolean; onClick?: () => void; dim?: boolean
+function ItemCard({ item, selected, onClick, dim, showPrice }: {
+  item: ShopItem; selected: boolean; onClick?: () => void; dim?: boolean; showPrice?: boolean
 }) {
   return (
     <div
@@ -451,7 +451,7 @@ function ItemCard({ item, selected, onClick, dim }: {
       <span style={{ fontSize: 18 }}>{item.emoji}</span>
       <div>
         <div style={{ fontSize: 10, fontWeight: 'bold', color: '#fff' }}>{item.name}</div>
-        <div style={{ fontSize: 9, color: '#FFD700' }}>₦ {item.price}</div>
+        {showPrice && <div style={{ fontSize: 9, color: '#FFD700' }}>₦ {item.price}</div>}
       </div>
       {selected && <span style={{ marginLeft: 'auto', color: '#B421F3', fontSize: 12 }}>✓</span>}
     </div>
