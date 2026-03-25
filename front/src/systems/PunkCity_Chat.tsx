@@ -96,6 +96,7 @@ export function useChat(options: UseChatOptions) {
     myConfirmed:        boolean
     partnerConfirmed:   boolean
     partnerInventory:   string[]
+    myInventory:        string[]
   } | null>(null)
 
   // Ref stable vers le callback — se met à jour sans recréer la connexion socket
