@@ -1193,31 +1193,91 @@ function InnerGame({
 
   return (
     <>
-      <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
+      {/* Minimap desktop / Burger mobile */}
+      {isMobile
+        ? <MobileBurgerMenu activeRoomId={activeRoomId} onRoomClick={loadRoom} />
+        : <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
+      }
       <RoomInfo room={activeRoom} />
 
-      {/* Chat — bas gauche */}
-      <ChatPanel
-        messages={messages}
-        myPlayerId={myPlayer?.id ?? ''}
-        connected={connected}
-        onSend={sendMessage}
-        onEmote={sendEmote}
-      />
-
-      {/* Panneau social — bas droite */}
-      <SocialPanel
-        players={players}
-        myPlayerId={myPlayer?.id ?? ''}
-        friends={friends}
-        pmConversations={pmConversations}
-        unreadPMs={unreadPMs}
-        onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
-        onMyApartment={() => loadRoom(`apartment_${config.username}`)}
-        onSelectPlayer={p => setSelectedPlayer(p)}
-        inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
-        onInviteToApartment={sendApartmentInviteToOne}
-      />
+      {/* Chat + Social — desktop : fixed corners ; mobile : icônes flottantes en bas */}
+      {isMobile ? (
+        <>
+          {/* Backdrop overlay */}
+          {mobilePanel && (
+            <div onClick={() => setMobilePanel(null)} style={{
+              position: 'fixed', inset: 0, zIndex: 1998, background: 'rgba(0,0,0,0.5)',
+            }} />
+          )}
+          {/* Chat overlay */}
+          {mobilePanel === 'chat' && (
+            <ChatPanel
+              messages={messages}
+              myPlayerId={myPlayer?.id ?? ''}
+              connected={connected}
+              onSend={sendMessage}
+              onEmote={sendEmote}
+              style={{ bottom: 80, left: 8, right: 8, width: 'auto', zIndex: 1999 }}
+            />
+          )}
+          {/* Social overlay */}
+          {mobilePanel === 'social' && (
+            <SocialPanel
+              players={players}
+              myPlayerId={myPlayer?.id ?? ''}
+              friends={friends}
+              pmConversations={pmConversations}
+              unreadPMs={unreadPMs}
+              onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
+              onMyApartment={() => loadRoom(`apartment_${config.username}`)}
+              onSelectPlayer={p => setSelectedPlayer(p)}
+              inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
+              onInviteToApartment={sendApartmentInviteToOne}
+              style={{ bottom: 80, left: 8, right: 8, width: 'auto', zIndex: 1999 }}
+            />
+          )}
+          {/* Floating bottom icons */}
+          <div style={{
+            position: 'fixed', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+            display: 'flex', gap: 16, zIndex: 2000,
+          }}>
+            {(['chat', 'social'] as const).map((panel, i) => (
+              <div key={panel} onClick={() => setMobilePanel(p => p === panel ? null : panel)} style={{
+                width: 52, height: 52,
+                background: mobilePanel === panel ? 'rgba(180,33,243,0.25)' : 'rgba(10,10,20,0.92)',
+                border: `1px solid ${mobilePanel === panel ? '#B421F3' : 'rgba(97,0,151,0.6)'}`,
+                borderRadius: '50%',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 22, cursor: 'pointer',
+                backdropFilter: 'blur(8px)',
+                boxShadow: mobilePanel === panel ? '0 0 20px rgba(180,33,243,0.5)' : '0 0 12px rgba(97,0,151,0.3)',
+              }}>{i === 0 ? '💬' : '👥'}</div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <>
+          <ChatPanel
+            messages={messages}
+            myPlayerId={myPlayer?.id ?? ''}
+            connected={connected}
+            onSend={sendMessage}
+            onEmote={sendEmote}
+          />
+          <SocialPanel
+            players={players}
+            myPlayerId={myPlayer?.id ?? ''}
+            friends={friends}
+            pmConversations={pmConversations}
+            unreadPMs={unreadPMs}
+            onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
+            onMyApartment={() => loadRoom(`apartment_${config.username}`)}
+            onSelectPlayer={p => setSelectedPlayer(p)}
+            inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
+            onInviteToApartment={sendApartmentInviteToOne}
+          />
+        </>
+      )}
 
       {/* Messages flottants pour chaque joueur */}
       {players.map(p => {
