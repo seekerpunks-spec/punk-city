@@ -676,11 +676,12 @@ interface SocialPanelProps {
   unreadPMs:       Map<string, number>
   onOpenPM:        (target: { id: string; username: string }) => void
   onMyApartment?:  () => void
+  style?:          React.CSSProperties
 }
 
 export function SocialPanel({
   players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment,
-  onSelectPlayer, inMyApartment, onInviteToApartment,
+  onSelectPlayer, inMyApartment, onInviteToApartment, style,
 }: SocialPanelProps) {
   const [tab, setTab] = useState<'online' | 'friends' | 'messages'>('online')
 
