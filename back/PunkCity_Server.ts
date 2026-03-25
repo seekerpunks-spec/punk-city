@@ -436,9 +436,19 @@ io.on('connection', (socket: Socket) => {
         return
       }
 
-      // Swap items between inventories
+      // Validate ownership — both players must own the items they offer
       const invA = inventories.get(trade.playerAId) ?? []
       const invB = inventories.get(trade.playerBId) ?? []
+      const aOwnsAll = trade.offerA.every(id => invA.includes(id))
+      const bOwnsAll = trade.offerB.every(id => invB.includes(id))
+      if (!aOwnsAll || !bOwnsAll) {
+        io.to(trade.playerAId).emit('trade:cancelled', { tradeId: data.tradeId })
+        io.to(trade.playerBId).emit('trade:cancelled', { tradeId: data.tradeId })
+        activeTrades.delete(data.tradeId)
+        return
+      }
+
+      // Swap items
       const newInvA = [...invA.filter(id => !trade.offerA.includes(id)), ...trade.offerB]
       const newInvB = [...invB.filter(id => !trade.offerB.includes(id)), ...trade.offerA]
       inventories.set(trade.playerAId, newInvA)
@@ -450,22 +460,36 @@ io.on('connection', (socket: Socket) => {
       wallets.set(trade.playerAId, newWalA)
       wallets.set(trade.playerBId, newWalB)
 
-      io.to(trade.playerAId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvA, neonCredits: newWalA })
-      io.to(trade.playerBId).emit('trade:completed', { tradeId: data.tradeId, inventory: newInvB, neonCredits: newWalB })
+      // Build receipt labels
+      const itemName = (id: string) => SHOP_CATALOG.find(i => i.id === id)?.name ?? id
+      const descA = [
+        ...trade.offerB.map(itemName),
+        ...(trade.creditsB > 0 ? [`₦${trade.creditsB}`] : []),
+      ]
+      const descB = [
+        ...trade.offerA.map(itemName),
+        ...(trade.creditsA > 0 ? [`₦${trade.creditsA}`] : []),
+      ]
 
-      const roomId = playerA?.roomId ?? playerB?.roomId
-      if (roomId) {
-        const room = rooms.get(roomId)
-        if (room) {
-          const sysMsg: ChatMessage = {
-            id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
-            text: `Trade between ${playerA?.username ?? '?'} and ${playerB?.username ?? '?'} completed!`,
-            roomId, timestamp: Date.now(), type: 'system',
-          }
-          addToHistory(room, sysMsg)
-          io.to(roomId).emit('chat:message', sysMsg)
-        }
+      io.to(trade.playerAId).emit('trade:completed', {
+        tradeId: data.tradeId, inventory: newInvA, neonCredits: newWalA, catalog: SHOP_CATALOG,
+        received: descA,
+      })
+      io.to(trade.playerBId).emit('trade:completed', {
+        tradeId: data.tradeId, inventory: newInvB, neonCredits: newWalB, catalog: SHOP_CATALOG,
+        received: descB,
+      })
+
+      // Personal receipt message to each player
+      const sendReceipt = (targetId: string, desc: string[]) => {
+        const msg = desc.length
+          ? `Trade complete! You received: ${desc.join(', ')}`
+          : 'Trade complete! (nothing received)'
+        io.to(targetId).emit('trade:receipt', { text: msg })
       }
+      sendReceipt(trade.playerAId, descA)
+      sendReceipt(trade.playerBId, descB)
+
       activeTrades.delete(data.tradeId)
     }
   })
