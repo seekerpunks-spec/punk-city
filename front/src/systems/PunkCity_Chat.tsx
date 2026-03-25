@@ -252,11 +252,20 @@ export function useChat(options: UseChatOptions) {
       setActiveTrade(prev => prev?.tradeId === data.tradeId ? { ...prev, partnerConfirmed: true } : prev)
     })
 
-    socket.on('trade:completed', (data: { tradeId: string; inventory: string[]; neonCredits: number; catalog: ShopItem[] }) => {
+    socket.on('trade:completed', (data: { tradeId: string; inventory: string[]; neonCredits: number; catalog: ShopItem[]; received: string[] }) => {
       if (data.catalog?.length) setShopCatalog(data.catalog)
       setInventory(data.inventory)
       setNeonCredits(data.neonCredits)
       setActiveTrade(null)
+    })
+
+    socket.on('trade:receipt', (data: { text: string }) => {
+      const msg: ChatMessage = {
+        id: Math.random().toString(36).slice(2), playerId: 'system',
+        username: 'Punk City', avatar: 'system',
+        text: data.text, roomId: '', timestamp: Date.now(), type: 'system',
+      }
+      setMessages(prev => [...prev.slice(-49), msg])
     })
 
     socket.on('trade:cancelled', (_data: { tradeId: string }) => {
