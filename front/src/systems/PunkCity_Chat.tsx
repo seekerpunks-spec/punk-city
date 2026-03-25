@@ -528,9 +528,10 @@ interface ChatPanelProps {
   onSend:     (text: string) => void
   onEmote:    (text: string) => void
   style?:     React.CSSProperties
+  compact?:   boolean
 }
 
-export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote, style }: ChatPanelProps) {
+export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote, style, compact }: ChatPanelProps) {
   const [input,   setInput]   = useState('')
   const [isEmote, setIsEmote] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
