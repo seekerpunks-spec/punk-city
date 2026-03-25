@@ -673,7 +673,6 @@ function InventoryPanel({ inventory, catalog, onClose }: {
               }}>
                 <div style={{ fontSize: 22, marginBottom: 6 }}>{item.emoji}</div>
                 <div style={{ fontSize: 11, fontWeight: 'bold' }}>{item.name}</div>
-                <div style={{ fontSize: 9, color: '#888', marginTop: 3 }}>{item.description}</div>
               </div>
             )
           })}
