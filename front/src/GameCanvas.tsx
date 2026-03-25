@@ -1666,6 +1666,61 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
 }
 
 // ─────────────────────────────────────────
+// BURGER MENU MOBILE
+// ─────────────────────────────────────────
+
+function MobileBurgerMenu({ activeRoomId, onRoomClick }: { activeRoomId: string; onRoomClick: (id: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ROOMS = [
+    { id: 'genesis-plaza',    label: 'Genesis Plaza',    icon: '🏛️' },
+    { id: 'neon-market',      label: 'Neon Market',      icon: '🛒' },
+    { id: 'seeker-club',      label: 'Seeker Club',      icon: '🎵' },
+    { id: 'gallery-district', label: 'Gallery District', icon: '🎨' },
+  ]
+  return (
+    <>
+      <div onClick={() => setOpen(o => !o)} style={{
+        position: 'fixed', top: 16, right: 16, width: 44, height: 44,
+        background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(97,0,151,0.5)',
+        borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        fontSize: 20, cursor: 'pointer', zIndex: 500, backdropFilter: 'blur(8px)',
+        boxShadow: '0 0 20px rgba(97,0,151,0.3)', color: '#B421F3',
+      }}>☰</div>
+      {open && (
+        <div style={{
+          position: 'fixed', inset: 0, background: 'rgba(10,10,20,0.97)',
+          zIndex: 3000, display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center', gap: 16, fontFamily: 'monospace',
+        }}>
+          <div style={{ color: '#B421F3', fontSize: 14, letterSpacing: 4, marginBottom: 24, textShadow: '0 0 12px #B421F3' }}>
+            PUNK CITY
+          </div>
+          {ROOMS.map(room => (
+            <div key={room.id} onClick={() => { onRoomClick(room.id); setOpen(false) }} style={{
+              width: 240, height: 64, cursor: 'pointer',
+              background: activeRoomId === room.id ? 'rgba(180,33,243,0.2)' : 'rgba(255,255,255,0.04)',
+              border: `1px solid ${activeRoomId === room.id ? '#B421F3' : 'rgba(97,0,151,0.3)'}`,
+              borderRadius: 12, display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px',
+              fontSize: 14, color: activeRoomId === room.id ? '#B421F3' : '#a0a0c0',
+              boxShadow: activeRoomId === room.id ? '0 0 12px rgba(180,33,243,0.3)' : 'none',
+            }}>
+              <span style={{ fontSize: 24 }}>{room.icon}</span>
+              {room.label}
+            </div>
+          ))}
+          <div onClick={() => setOpen(false)} style={{
+            marginTop: 24, width: 44, height: 44,
+            background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(97,0,151,0.4)',
+            borderRadius: '50%', color: '#666', fontSize: 18, cursor: 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</div>
+        </div>
+      )}
+    </>
+  )
+}
+
+// ─────────────────────────────────────────
 // PLAYER SPRITE
 // idle  → sprite de la dernière direction
 // marche sw → walk_sw.gif animé
