@@ -389,8 +389,11 @@ io.on('connection', (socket: Socket) => {
       offerA: [], offerB: [], creditsA: 0, creditsB: 0, confirmedA: false, confirmedB: false,
     }
     activeTrades.set(data.tradeId, trade)
-    socket.emit('trade:started', { tradeId: data.tradeId, partnerId: data.requesterId, partnerUsername: requester.username })
-    io.to(data.requesterId).emit('trade:started', { tradeId: data.tradeId, partnerId: socket.id, partnerUsername: accepter.username })
+    const invAccepter  = inventories.get(socket.id)       ?? []
+    const invRequester = inventories.get(data.requesterId) ?? []
+    // Each player receives the partner's current inventory so they can see selections in real-time
+    socket.emit('trade:started', { tradeId: data.tradeId, partnerId: data.requesterId, partnerUsername: requester.username, partnerInventory: invRequester })
+    io.to(data.requesterId).emit('trade:started', { tradeId: data.tradeId, partnerId: socket.id, partnerUsername: accepter.username, partnerInventory: invAccepter })
   })
 
   socket.on('trade:decline', (data: { tradeId: string; requesterId: string }) => {
