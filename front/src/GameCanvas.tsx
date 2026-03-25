@@ -9,6 +9,13 @@ import { AnimatedGIF } from '@pixi/gif'
 import { useMovement, isoToScreen, useCameraFollow } from './systems/PunkCity_Movement'
 import { useChat, ChatPanel, SocialPanel }             from './systems/PunkCity_Chat'
 import type { ShopItem }                               from './systems/PunkCity_Chat'
+
+const STATIC_CATALOG: ShopItem[] = [
+  { id: 'item_1', name: 'Neon Lamp',      price: 100, emoji: '💡' },
+  { id: 'item_2', name: 'Purple Chair',   price: 150, emoji: '🪑' },
+  { id: 'item_3', name: 'Hologram Plant', price: 80,  emoji: '🌿' },
+  { id: 'item_4', name: 'Cyber Desk',     price: 200, emoji: '🖥️' },
+]
 import { useRoomSystem, Minimap, RoomInfo, RoomTransitionOverlay } from './systems/PunkCity_Rooms'
 
 interface GameConfig {
