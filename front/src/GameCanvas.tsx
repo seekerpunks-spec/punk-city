@@ -461,15 +461,16 @@ function TradeWindow({
   onCancel,
 }: {
   trade: {
-    tradeId:          string
-    partnerId:        string
-    partnerUsername:  string
-    myOffer:          string[]
-    partnerOffer:     string[]
-    myCredits:        number
-    partnerCredits:   number
-    myConfirmed:      boolean
-    partnerConfirmed: boolean
+    tradeId:           string
+    partnerId:         string
+    partnerUsername:   string
+    myOffer:           string[]
+    partnerOffer:      string[]
+    myCredits:         number
+    partnerCredits:    number
+    myConfirmed:       boolean
+    partnerConfirmed:  boolean
+    partnerInventory:  string[]
   }
   myInventory:   string[]
   myBalance:     number
@@ -478,7 +479,6 @@ function TradeWindow({
   onConfirm:     () => void
   onCancel:      () => void
 }) {
-  const [creditsInput, setCreditsInput] = useState(0)
   const resolve = (id: string) => catalog.find(c => c.id === id)
   const bothConfirmed = trade.myConfirmed && trade.partnerConfirmed
 
@@ -487,13 +487,12 @@ function TradeWindow({
     const next = trade.myOffer.includes(itemId)
       ? trade.myOffer.filter(i => i !== itemId)
       : [...trade.myOffer, itemId]
-    onUpdateOffer(next, creditsInput)
+    onUpdateOffer(next, trade.myCredits)
   }
 
   const handleCreditsChange = (val: number) => {
     if (trade.myConfirmed) return
     const clamped = Math.max(0, Math.min(val, myBalance))
-    setCreditsInput(clamped)
     onUpdateOffer(trade.myOffer, clamped)
   }
 
