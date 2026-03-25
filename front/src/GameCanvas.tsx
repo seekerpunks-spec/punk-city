@@ -1378,7 +1378,7 @@ function InnerGame({
             minWidth:      220,
           }}>
             <div style={{ fontSize: 11, color: '#ffaa00', marginBottom: 6 }}>
-              🏠 <b>{inv.fromUsername}</b> vous invite dans son appartement
+              🏠 <b>{inv.fromUsername}</b> invites you to their apartment
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
