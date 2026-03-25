@@ -470,7 +470,7 @@ function TradeWindow({
     myConfirmed:       boolean
     partnerConfirmed:  boolean
     partnerInventory:  string[]
-    myInventory:       string[]
+    trade.myInventory:       string[]
   }
   myBalance:     number
   catalog:       ShopItem[]
@@ -547,10 +547,10 @@ function TradeWindow({
               <span style={{ color: '#555', fontSize: 9 }}>/ ₦{myBalance}</span>
             </div>
             <div style={{ overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {myInventory.length === 0 && (
+              {trade.myInventory.length === 0 && (
                 <div style={{ color: '#444', fontSize: 10, padding: '8px 0' }}>Your inventory is empty.</div>
               )}
-              {myInventory.map(id => {
+              {trade.myInventory.map(id => {
                 const item = resolve(id)
                 if (!item) return null
                 const selected = trade.myOffer.includes(id)
@@ -1508,7 +1508,7 @@ function InnerGame({
       {activeTrade && (
         <TradeWindow
           trade={activeTrade}
-          myInventory={inventory}
+          trade.myInventory={inventory}
           myBalance={neonCredits}
           catalog={shopCatalog}
           onUpdateOffer={(offer, credits) => updateTradeOffer(activeTrade.tradeId, offer, credits)}
