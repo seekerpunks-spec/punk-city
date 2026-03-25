@@ -761,7 +761,6 @@ function NeonMarketShop({
               }}>
                 <div style={{ fontSize: 22 }}>{item.emoji}</div>
                 <div style={{ fontSize: 12, fontWeight: 'bold', color: '#ffffff' }}>{item.name}</div>
-                <div style={{ fontSize: 10, color: '#888', lineHeight: 1.4 }}>{item.description}</div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 4 }}>
                   <span style={{ color: '#FFD700', fontSize: 11, fontWeight: 'bold' }}>₦ {item.price}</span>
                   {owned ? (
