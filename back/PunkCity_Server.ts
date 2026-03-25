@@ -402,19 +402,17 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('trade:update_offer', (data: { tradeId: string; offer: string[]; credits: number }) => {
-    console.log(`[trade:update_offer] from=${socket.id} tradeId=${data.tradeId} offer=${JSON.stringify(data.offer)}`)
     const trade = activeTrades.get(data.tradeId)
-    if (!trade) { console.log('[trade:update_offer] TRADE NOT FOUND'); return }
+    if (!trade) return
     const isA = trade.playerAId === socket.id
-    if (!isA && trade.playerBId !== socket.id) { console.log('[trade:update_offer] SOCKET NOT IN TRADE'); return }
+    if (!isA && trade.playerBId !== socket.id) return
     const offer   = data.offer.slice(0, 20)
     const credits = Math.max(0, Math.floor(data.credits ?? 0))
     const wallet  = wallets.get(socket.id) ?? 0
-    if (credits > wallet) { console.log('[trade:update_offer] CREDITS EXCEEDED'); return socket.emit('shop:error', { message: 'Not enough Neon Credits to offer.' }) }
+    if (credits > wallet) return socket.emit('shop:error', { message: 'Not enough Neon Credits to offer.' })
     if (isA) { trade.offerA = offer; trade.creditsA = credits; trade.confirmedA = false; trade.confirmedB = false }
     else      { trade.offerB = offer; trade.creditsB = credits; trade.confirmedA = false; trade.confirmedB = false }
     const partnerId = isA ? trade.playerBId : trade.playerAId
-    console.log(`[trade:update_offer] emitting offer_updated to partner=${partnerId} offer=${JSON.stringify(offer)}`)
     io.to(partnerId).emit('trade:offer_updated', { tradeId: data.tradeId, offer, credits })
   })
 
