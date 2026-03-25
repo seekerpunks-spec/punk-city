@@ -1164,7 +1164,7 @@ function InnerGame({
   const [showInventory, setShowInventory] = useState(false)
 
   // ── Mobile ───────────────────────────────
-  const isMobile = useIsMobile()
+  const { isLandscapeMobile } = useMobileOrientation()
   const [mobilePanel, setMobilePanel] = useState<'chat' | 'social' | null>(null)
 
   // ── Popup joueur au clic ─────────────────
