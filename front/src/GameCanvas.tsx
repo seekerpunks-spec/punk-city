@@ -1550,6 +1550,7 @@ function InnerGame({
 
 export default function GameCanvas({ config }: { config: GameConfig }) {
   const mountRef = useRef<HTMLDivElement>(null)
+  const { isPortraitMobile } = useMobileOrientation()
 
   const [pixiReady, setPixiReady] = useState<{
     app:       Application
