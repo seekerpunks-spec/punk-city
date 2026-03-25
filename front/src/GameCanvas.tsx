@@ -1622,6 +1622,25 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
           config={config}
         />
       )}
+      {/* Écran de rotation portrait mobile */}
+      {isPortraitMobile && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: '#0d0d1a',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: 16, zIndex: 99999,
+          fontFamily: 'monospace',
+        }}>
+          <div style={{ fontSize: 56 }}>🔄</div>
+          <div style={{ color: '#B421F3', fontSize: 14, letterSpacing: 3, textShadow: '0 0 12px #B421F3' }}>
+            PUNK CITY
+          </div>
+          <div style={{ color: '#a0a0c0', fontSize: 12, textAlign: 'center', maxWidth: 260, lineHeight: 1.6 }}>
+            Please rotate your device to landscape mode to play
+          </div>
+        </div>
+      )}
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateX(-50%) translateY(8px); }
