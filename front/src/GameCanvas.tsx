@@ -1715,8 +1715,8 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
           </div>
         </div>
       </div>
-      {/* Row 2 : room + player count */}
-      <div style={{
+      {/* Row 2 : room + player count — masqué en landscape mobile */}
+      {!isMobile && <div style={{
         background: 'rgba(10,10,20,0.88)', border: '1px solid rgba(97,0,151,0.3)',
         borderRadius: 8, padding: '5px 12px', display: 'flex', alignItems: 'center',
         gap: 8, backdropFilter: 'blur(8px)',
