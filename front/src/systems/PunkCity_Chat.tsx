@@ -770,7 +770,7 @@ export function SocialPanel({
 
       {/* Content */}
       <div style={{
-        height: 220, overflowY: 'auto',
+        height: compact ? 140 : 220, overflowY: 'auto',
         padding: '6px 10px',
         display: 'flex', flexDirection: 'column', gap: 4,
         scrollbarWidth: 'thin', scrollbarColor: '#610097 transparent',
