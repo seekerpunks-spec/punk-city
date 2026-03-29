@@ -85,6 +85,10 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
       { x: 0,  y: 12, targetRoom: 'gallery-district',  targetX: 22, targetY: 12, label: '← Gallery District' },
     ],
     tiles: [
+      // OG Club — tiles bloquées sous le bâtiment (col 1-3, row 1-3)
+      { x: 1, y: 1, type: 'blocked' as const }, { x: 2, y: 1, type: 'blocked' as const }, { x: 3, y: 1, type: 'blocked' as const },
+      { x: 1, y: 2, type: 'blocked' as const }, { x: 2, y: 2, type: 'blocked' as const }, { x: 3, y: 2, type: 'blocked' as const },
+      { x: 1, y: 3, type: 'blocked' as const }, { x: 2, y: 3, type: 'blocked' as const }, { x: 3, y: 3, type: 'blocked' as const },
       // Fontaine centrale
       { x: 11, y: 11, type: 'decoration', variant: 1 },
       { x: 12, y: 11, type: 'decoration', variant: 1 },
