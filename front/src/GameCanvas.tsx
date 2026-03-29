@@ -1584,16 +1584,16 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 
       const playerGfx = await buildPlayerSprite(world, app)
 
-      // OG Club — mur NW (col 1-3, row 5-7), ancré centre bas de la zone
+      // OG Club — col 4-5, row 2-3, ancré bas-centre tile (4,2)
       const ogClubTexture = await Assets.load('/og_club.png')
       const ogClub = new Sprite(ogClubTexture)
-      const ogPos = isoToScreen(2, 6)
+      const ogPos = isoToScreen(4, 2)
       ogClub.anchor.set(0.5, 1)
-      ogClub.scale.set(2.2)
+      ogClub.scale.set(1.8)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
-      // zIndex basé sur la rangée avant du footprint (row 7) — joueurs au sud passent devant, au nord passent derrière
-      ogClub.zIndex = Math.round(isoToScreen(2, 7).y)
+      // zIndex = pied avant du footprint (row 3, bord sud) — même système que les joueurs (Math.round(pixiY))
+      ogClub.zIndex = Math.round(isoToScreen(4, 3).y)
       world.addChild(ogClub)
 
       const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
