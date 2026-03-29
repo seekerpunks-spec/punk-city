@@ -1594,8 +1594,8 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.scale.set(1.8)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
-      // zIndex = pied avant du footprint (row 3, bord sud) — même système que les joueurs (Math.round(pixiY))
-      ogClub.zIndex = Math.round(isoToScreen(4, 3).y)
+      // zIndex = bord sud du footprint (row 3, col 4) — même formule row*32+col que les joueurs
+      ogClub.zIndex = 3 * 32 + 4  // = 100
       world.addChild(ogClub)
 
       const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
