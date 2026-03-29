@@ -1589,10 +1589,11 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       const ogClub = new Sprite(ogClubTexture)
       const ogPos = isoToScreen(2, 6)
       ogClub.anchor.set(0.5, 1)
-      ogClub.scale.set(1.58)
+      ogClub.scale.set(2.2)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
-      ogClub.zIndex = ogPos.y
+      // zIndex basé sur la rangée avant du footprint (row 7) — joueurs au sud passent devant, au nord passent derrière
+      ogClub.zIndex = Math.round(isoToScreen(2, 7).y)
       world.addChild(ogClub)
 
       const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
