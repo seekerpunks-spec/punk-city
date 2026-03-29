@@ -1584,12 +1584,12 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 
       const playerGfx = await buildPlayerSprite(world, app)
 
-      // OG Club — sprite déco fixe sur la map iso (col 5, row 3)
+      // OG Club — sprite déco fixe, coin haut-gauche (col 2, row 2)
       const ogClubTexture = await Assets.load('/og_club.png')
       const ogClub = new Sprite(ogClubTexture)
-      const ogPos = isoToScreen(5, 3)
+      const ogPos = isoToScreen(2, 2)
       ogClub.anchor.set(0.5, 1)
-      ogClub.scale.set(3.51)
+      ogClub.scale.set(1.2)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
       ogClub.zIndex = ogPos.y
