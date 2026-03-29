@@ -915,8 +915,10 @@ function InnerGame({
         container._spriteNw.x = newX; container._spriteNw.y = newY
         container._spriteNe.x = newX; container._spriteNe.y = newY
 
-        // Tri isométrique — zIndex = Y des pieds, mis à jour chaque frame
-        const z = Math.round(newY)
+        // Tri isométrique — clé row * 32 + col (row-dominant, correct pour l'iso)
+        const isoCol = Math.round((newX / 32 + newY / 16) / 2)
+        const isoRow = Math.round((newY / 16 - newX / 32) / 2)
+        const z = isoRow * 32 + isoCol
         container._walkGif.zIndex  = z
         container._idleSw.zIndex   = z
         container._spriteSe.zIndex = z
