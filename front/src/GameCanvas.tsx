@@ -1589,7 +1589,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       const ogClub = new Sprite(ogClubTexture)
       const ogPos = isoToScreen(2, 6)
       ogClub.anchor.set(0.5, 1)
-      ogClub.scale.set(1.0)
+      ogClub.scale.set(1.58)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
       ogClub.zIndex = ogPos.y
