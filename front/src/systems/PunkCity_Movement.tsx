@@ -341,8 +341,10 @@ export function useMovement(
       playerSprite.x = p.pixiX
       playerSprite.y = p.pixiY
 
-      // Depth sorting — le joueur passe devant/derrière les objets selon Y
-      playerSprite.zIndex = Math.round(p.pixiY)
+      // Depth sorting — clé row * 32 + col (row-dominant)
+      const isoCol = Math.round((p.pixiX / 32 + p.pixiY / 16) / 2)
+      const isoRow = Math.round((p.pixiY / 16 - p.pixiX / 32) / 2)
+      playerSprite.zIndex = isoRow * 32 + isoCol
     }
 
     app.ticker.add(tick)
