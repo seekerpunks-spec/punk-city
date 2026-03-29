@@ -85,10 +85,9 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
       { x: 0,  y: 12, targetRoom: 'gallery-district',  targetX: 22, targetY: 12, label: '← Gallery District' },
     ],
     tiles: [
-      // OG Club — empreinte au sol 3x3 centrée sur l'ancrage (2,6) : col 1-3, row 5-7
-      { x: 1, y: 5, type: 'blocked' as const }, { x: 2, y: 5, type: 'blocked' as const }, { x: 3, y: 5, type: 'blocked' as const },
-      { x: 1, y: 6, type: 'blocked' as const }, { x: 2, y: 6, type: 'blocked' as const }, { x: 3, y: 6, type: 'blocked' as const },
-      { x: 1, y: 7, type: 'blocked' as const }, { x: 2, y: 7, type: 'blocked' as const }, { x: 3, y: 7, type: 'blocked' as const },
+      // OG Club — footprint col 4-5, row 2-3
+      { x: 4, y: 2, type: 'blocked' as const }, { x: 5, y: 2, type: 'blocked' as const },
+      { x: 4, y: 3, type: 'blocked' as const }, { x: 5, y: 3, type: 'blocked' as const },
       // Gallery (futur) — mur NW (col 5-7, row 1-3)
       { x: 5, y: 1, type: 'blocked' as const }, { x: 6, y: 1, type: 'blocked' as const }, { x: 7, y: 1, type: 'blocked' as const },
       { x: 5, y: 2, type: 'blocked' as const }, { x: 6, y: 2, type: 'blocked' as const }, { x: 7, y: 2, type: 'blocked' as const },
