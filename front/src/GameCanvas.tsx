@@ -1594,8 +1594,8 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.scale.set(1.8)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
-      // zIndex = bord sud du footprint (row 3, col 4) — même formule row*32+col que les joueurs
-      ogClub.zIndex = 3 * 32 + 4  // = 100
+      // zIndex = front_row * 32 - 1 → tout joueur à row >= 3 apparaît devant, row <= 2 derrière
+      ogClub.zIndex = 3 * 32 - 1  // = 95
       world.addChild(ogClub)
 
       const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
