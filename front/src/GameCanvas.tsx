@@ -1280,16 +1280,6 @@ function InnerGame({
         </>
       ) : (
         <>
-          {hoveredTile && (
-            <div style={{
-              position: 'fixed', bottom: 220, left: 16,
-              background: 'rgba(0,0,0,0.55)', borderRadius: 4,
-              padding: '2px 8px', fontSize: 11, color: '#B421F3',
-              fontFamily: 'monospace', pointerEvents: 'none', zIndex: 2000,
-            }}>
-              col: {hoveredTile.x} · row: {hoveredTile.y}
-            </div>
-          )}
           <ChatPanel
             messages={messages}
             myPlayerId={myPlayer?.id ?? ''}
