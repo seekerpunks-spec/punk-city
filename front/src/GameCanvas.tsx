@@ -1956,7 +1956,7 @@ async function buildPlayerSprite(world: Container, app: Application): Promise<Gr
     // Tri isométrique — clé row * 32 + col (row-dominant, correct pour l'iso)
     const isoCol = Math.round((g.x / 32 + g.y / 16) / 2)
     const isoRow = Math.round((g.y / 16 - g.x / 32) / 2)
-    const z = isoRow * 32 + isoCol
+    const z = isoRow * 32 + isoCol + 1000
     walkGif.zIndex   = z
     idleSw.zIndex    = z
     spritesSe.zIndex = z
