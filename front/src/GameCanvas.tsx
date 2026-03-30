@@ -881,7 +881,25 @@ function InnerGame({
   const { activeRoomId, activeRoom, transitioning, blockedTiles, loadRoom, checkDoors } =
     useRoomSystem(app, world, onRoomChange)
 
-  const { player: playerRef, hoveredTile } = useMovement(app, world, playerGfx, blockedTiles)
+  const { player: playerRef } = useMovement(app, world, playerGfx, blockedTiles)
+
+  const [tileCoords, setTileCoords] = useState<{ col: number; row: number } | null>(null)
+  useEffect(() => {
+    const canvas = app.canvas
+    const onMouseMove = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect()
+      const sx = (e.clientX - rect.left) / world.scale.x - world.x / world.scale.x
+      const sy = (e.clientY - rect.top)  / world.scale.y - world.y / world.scale.y
+      const g = screenToIso(sx, sy)
+      if (g.x >= 0 && g.y >= 0 && g.x < 24 && g.y < 24) {
+        setTileCoords({ col: g.x, row: g.y })
+      } else {
+        setTileCoords(null)
+      }
+    }
+    canvas.addEventListener('mousemove', onMouseMove)
+    return () => canvas.removeEventListener('mousemove', onMouseMove)
+  }, [app, world])
 
   useEffect(() => {
     let lastX = -1, lastY = -1
