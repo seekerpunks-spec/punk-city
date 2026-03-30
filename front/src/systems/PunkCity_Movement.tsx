@@ -469,12 +469,36 @@ export function useCameraFollow(
     app.stage.on('pointerup',   onPointerUp)
     app.stage.on('pointerupoutside', onPointerUp)
 
+    // ── Ticker — scroll uniquement quand le joueur sort de la zone visible ──
+    const EDGE_MARGIN = 120 // px écran — quand le joueur passe sous cette marge, la caméra bouge
+    const tick = () => {
+      if (drag.current.active) return
+
+      const p = player.current
+      const sx = world.x + p.pixiX * world.scale.x
+      const sy = world.y + p.pixiY * world.scale.y
+      const W  = app.screen.width
+      const H  = app.screen.height
+
+      let tx = world.x
+      let ty = world.y
+      if (sx < EDGE_MARGIN)        tx = world.x + (EDGE_MARGIN - sx)
+      else if (sx > W - EDGE_MARGIN) tx = world.x + (W - EDGE_MARGIN - sx)
+      if (sy < EDGE_MARGIN)        ty = world.y + (EDGE_MARGIN - sy)
+      else if (sy > H - EDGE_MARGIN) ty = world.y + (H - EDGE_MARGIN - sy)
+
+      world.x += (tx - world.x) * 0.1
+      world.y += (ty - world.y) * 0.1
+    }
+    app.ticker.add(tick)
+
     return () => {
       app.canvas.removeEventListener('wheel', onWheel)
       app.stage.off('pointerdown', onPointerDown)
       app.stage.off('pointermove', onPointerMove)
       app.stage.off('pointerup',   onPointerUp)
       app.stage.off('pointerupoutside', onPointerUp)
+      app.ticker.remove(tick)
     }
   }, [app, world])
 }
