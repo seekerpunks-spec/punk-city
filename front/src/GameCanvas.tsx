@@ -4,7 +4,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Application, Container, Graphics, Sprite, Ticker, Assets } from 'pixi.js'
+import { Application, Container, Graphics, Sprite, Assets } from 'pixi.js'
 import { AnimatedGIF } from '@pixi/gif'
 import { useMovement, isoToScreen, useCameraFollow } from './systems/PunkCity_Movement'
 import { useChat, ChatPanel, SocialPanel }             from './systems/PunkCity_Chat'
