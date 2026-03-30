@@ -19,7 +19,7 @@ import { Application, Container, Graphics, Sprite, Ticker } from 'pixi.js'
 const TILE_W = 64
 const TILE_H = 32
 const TILE_DEPTH = 8        // hauteur des faces latérales
-const WALK_SPEED = 3.5      // pixels par frame
+const WALK_SPEED = 3        // pixels par frame
 const GRID_COLS = 24
 const GRID_ROWS = 24
 
