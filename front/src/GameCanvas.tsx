@@ -885,6 +885,7 @@ function InnerGame({
 
   useEffect(() => {
     let lastX = -1, lastY = -1
+    let lastReportTime = 0
     const tick = () => {
       const p = playerRef.current
       // Vérifie les portes seulement quand la grille change
@@ -892,10 +893,14 @@ function InnerGame({
         lastX = p.gridX; lastY = p.gridY
         checkDoors(p.gridX, p.gridY)
       }
-      // Envoie position pixel à chaque frame si le joueur bouge → mouvement fluide côté POV2
+      // Envoie position pixel max 20fps (50ms) pendant le mouvement
       if (p.moving) {
-        const dir = (playerGfx as any)._direction || 'sw'
-        reportMove(p.gridX, p.gridY, p.pixiX, p.pixiY, dir)
+        const now = Date.now()
+        if (now - lastReportTime >= 50) {
+          lastReportTime = now
+          const dir = (playerGfx as any)._direction || 'sw'
+          reportMove(p.gridX, p.gridY, p.pixiX, p.pixiY, dir)
+        }
       }
     }
     app.ticker.add(tick)
