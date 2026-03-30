@@ -1571,6 +1571,8 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
   useEffect(() => {
     if (!mountRef.current) return
     const app = new Application()
+    let onResize: (() => void) | null = null
+    let destroyed = false
 
     ;(async () => {
       await app.init({
@@ -1582,7 +1584,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
         antialias:       false,
       })
 
-      if (!mountRef.current) return
+      if (destroyed || !mountRef.current) return
       mountRef.current.appendChild(app.canvas)
 
       const world = new Container()
@@ -1590,6 +1592,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       app.stage.addChild(world)
 
       const playerGfx = await buildPlayerSprite(world, app)
+      if (destroyed) return
 
       // OG Club — col 4-5, row 9-10, ancré bas-centre tile (4,9)
       const ogClubBuf = await fetch('/og_club.gif').then(r => r.arrayBuffer())
@@ -1605,16 +1608,18 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.zIndex = 500
       world.addChild(ogClub)
 
-      const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
+      onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
       window.addEventListener('resize', onResize)
 
       setPixiReady({ app, world, playerGfx })
-
-      return () => {
-        window.removeEventListener('resize', onResize)
-        app.destroy(true)
-      }
     })()
+
+    // Cleanup retourné directement à React — appelé à chaque unmount/hot reload
+    return () => {
+      destroyed = true
+      if (onResize) window.removeEventListener('resize', onResize)
+      app.destroy(true)
+    }
   }, [])
 
   return (
