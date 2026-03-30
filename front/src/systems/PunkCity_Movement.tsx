@@ -204,6 +204,9 @@ export function useMovement(
   // Highlight de la tile survolée
   const hoverMarker = useRef<Graphics | null>(null)
 
+  // Coordonnées de la tile survolée (exposées au parent)
+  const [hoveredTile, setHoveredTile] = useState<{ x: number; y: number } | null>(null)
+
   // ── Init position de départ ──────────────
   useEffect(() => {
     const { x, y } = tileCenterPixel(player.current.gridX, player.current.gridY)
