@@ -881,7 +881,7 @@ function InnerGame({
   const { activeRoomId, activeRoom, transitioning, blockedTiles, loadRoom, checkDoors } =
     useRoomSystem(app, world, onRoomChange)
 
-  const { player: playerRef } = useMovement(app, world, playerGfx, blockedTiles)
+  const { player: playerRef, hoveredTile } = useMovement(app, world, playerGfx, blockedTiles)
 
   useEffect(() => {
     let lastX = -1, lastY = -1
