@@ -1970,6 +1970,8 @@ async function buildPlayerSprite(world: Container, app: Application): Promise<Gr
 
     lastX = g.x
     lastY = g.y
-  })
+  }
+  app.ticker.add(playerTick)
+  ;(g as any)._ticker = playerTick
   return g
 }
