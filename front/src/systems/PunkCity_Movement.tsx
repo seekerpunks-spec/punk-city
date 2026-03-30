@@ -420,8 +420,10 @@ export function useCameraFollow(
     startY: 0,
     startWorldX: 0,
     startWorldY: 0,
-    moved: false,  // true si le pointeur a vraiment bougé (pour distinguer clic vs drag)
+    moved: false,       // true si le pointeur a vraiment bougé (pour distinguer clic vs drag)
+    userDragged: false, // true après un drag manuel → coupe le suivi jusqu'au prochain mouvement joueur
   })
+  const lastPlayerPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     if (!app || !world) return
