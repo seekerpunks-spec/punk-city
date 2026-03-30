@@ -1601,8 +1601,8 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.y = ogPos.y
       ogClub.eventMode = 'none'
       ogClub.interactiveChildren = false
-      // zIndex = front_row * 32 - 1 (front_row = 10)
-      ogClub.zIndex = 10 * 32 - 1  // = 319
+      // Bâtiment toujours sous les joueurs (joueurs = row*32+col + 1000, min ~1000)
+      ogClub.zIndex = 500
       world.addChild(ogClub)
 
       const onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
