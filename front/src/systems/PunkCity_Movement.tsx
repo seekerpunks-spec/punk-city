@@ -420,10 +420,8 @@ export function useCameraFollow(
     startY: 0,
     startWorldX: 0,
     startWorldY: 0,
-    moved: false,       // true si le pointeur a vraiment bougé (pour distinguer clic vs drag)
-    userDragged: false, // true après un drag manuel → coupe le suivi jusqu'au prochain mouvement joueur
+    moved: false,  // true si le pointeur a vraiment bougé (pour distinguer clic vs drag)
   })
-  const lastPlayerPos = useRef({ x: 0, y: 0 })
 
   useEffect(() => {
     if (!app || !world) return
@@ -455,8 +453,7 @@ export function useCameraFollow(
 
       // Considère comme drag si déplacement > 5px
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-        drag.current.moved       = true
-        drag.current.userDragged = true
+        drag.current.moved = true
         world.x = drag.current.startWorldX + dx
         world.y = drag.current.startWorldY + dy
       }
@@ -473,22 +470,12 @@ export function useCameraFollow(
     app.stage.on('pointerupoutside', onPointerUp)
 
     // ── Ticker — suivi intelligent ────────
-    // La caméra ne suit le joueur que quand il se déplace, et s'arrête après un drag manuel
+    // La caméra ne suit le joueur que quand il sort de la zone centrale
     const tick = () => {
       // Pas de suivi pendant le drag
       if (drag.current.active && drag.current.moved) return
 
       const p = player.current
-
-      // Si le joueur se déplace → annule le flag drag manuel
-      if (p.pixiX !== lastPlayerPos.current.x || p.pixiY !== lastPlayerPos.current.y) {
-        drag.current.userDragged = false
-      }
-      lastPlayerPos.current.x = p.pixiX
-      lastPlayerPos.current.y = p.pixiY
-
-      // Si l'utilisateur a dragué manuellement et que le joueur ne bouge pas → ne pas suivre
-      if (drag.current.userDragged) return
 
       // Position du joueur à l'écran (en pixels écran)
       const playerScreenX = world.x + p.pixiX * world.scale.x
