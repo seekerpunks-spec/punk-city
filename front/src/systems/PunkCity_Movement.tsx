@@ -473,12 +473,22 @@ export function useCameraFollow(
     app.stage.on('pointerupoutside', onPointerUp)
 
     // ── Ticker — suivi intelligent ────────
-    // La caméra ne suit le joueur que quand il sort de la zone centrale
+    // La caméra ne suit le joueur que quand il se déplace, et s'arrête après un drag manuel
     const tick = () => {
       // Pas de suivi pendant le drag
       if (drag.current.active && drag.current.moved) return
 
       const p = player.current
+
+      // Si le joueur se déplace → annule le flag drag manuel
+      if (p.pixiX !== lastPlayerPos.current.x || p.pixiY !== lastPlayerPos.current.y) {
+        drag.current.userDragged = false
+      }
+      lastPlayerPos.current.x = p.pixiX
+      lastPlayerPos.current.y = p.pixiY
+
+      // Si l'utilisateur a dragué manuellement et que le joueur ne bouge pas → ne pas suivre
+      if (drag.current.userDragged) return
 
       // Position du joueur à l'écran (en pixels écran)
       const playerScreenX = world.x + p.pixiX * world.scale.x
