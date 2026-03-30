@@ -923,7 +923,7 @@ function InnerGame({
         // Tri isométrique — clé row * 32 + col (row-dominant, correct pour l'iso)
         const isoCol = Math.round((newX / 32 + newY / 16) / 2)
         const isoRow = Math.round((newY / 16 - newX / 32) / 2)
-        const z = isoRow * 32 + isoCol
+        const z = isoRow * 32 + isoCol + 1000
         container._walkGif.zIndex  = z
         container._idleSw.zIndex   = z
         container._spriteSe.zIndex = z
