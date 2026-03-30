@@ -88,18 +88,6 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
       // OG Club — footprint col 4-5, row 9-10
       { x: 4, y: 9,  type: 'blocked' as const }, { x: 5, y: 9,  type: 'blocked' as const },
       { x: 4, y: 10, type: 'blocked' as const }, { x: 5, y: 10, type: 'blocked' as const },
-      // Gallery (futur) — mur NW (col 5-7, row 1-3)
-      { x: 5, y: 1, type: 'blocked' as const }, { x: 6, y: 1, type: 'blocked' as const }, { x: 7, y: 1, type: 'blocked' as const },
-      { x: 5, y: 2, type: 'blocked' as const }, { x: 6, y: 2, type: 'blocked' as const }, { x: 7, y: 2, type: 'blocked' as const },
-      { x: 5, y: 3, type: 'blocked' as const }, { x: 6, y: 3, type: 'blocked' as const }, { x: 7, y: 3, type: 'blocked' as const },
-      // Club (futur) — mur NE (col 13-15, row 1-3)
-      { x: 13, y: 1, type: 'blocked' as const }, { x: 14, y: 1, type: 'blocked' as const }, { x: 15, y: 1, type: 'blocked' as const },
-      { x: 13, y: 2, type: 'blocked' as const }, { x: 14, y: 2, type: 'blocked' as const }, { x: 15, y: 2, type: 'blocked' as const },
-      { x: 13, y: 3, type: 'blocked' as const }, { x: 14, y: 3, type: 'blocked' as const }, { x: 15, y: 3, type: 'blocked' as const },
-      // Neon Market (futur) — mur NE (col 17-19, row 5-7)
-      { x: 17, y: 5, type: 'blocked' as const }, { x: 18, y: 5, type: 'blocked' as const }, { x: 19, y: 5, type: 'blocked' as const },
-      { x: 17, y: 6, type: 'blocked' as const }, { x: 18, y: 6, type: 'blocked' as const }, { x: 19, y: 6, type: 'blocked' as const },
-      { x: 17, y: 7, type: 'blocked' as const }, { x: 18, y: 7, type: 'blocked' as const }, { x: 19, y: 7, type: 'blocked' as const },
       // Fontaine centrale
       { x: 11, y: 11, type: 'decoration', variant: 1 },
       { x: 12, y: 11, type: 'decoration', variant: 1 },
