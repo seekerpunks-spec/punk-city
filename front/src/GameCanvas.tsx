@@ -1193,10 +1193,15 @@ function InnerGame({
 
   // ── Position temps réel du joueur local ──
   const [myPixiPos, setMyPixiPos] = useState({ x: 0, y: 0 })
+  const myPixiPosRef = useRef({ x: 0, y: 0 })
   useEffect(() => {
     const tick = () => {
       const p = playerRef.current
-      setMyPixiPos({ x: p.pixiX, y: p.pixiY })
+      // Ne trigger un re-render React que si la position a réellement changé
+      if (Math.abs(p.pixiX - myPixiPosRef.current.x) > 0.5 || Math.abs(p.pixiY - myPixiPosRef.current.y) > 0.5) {
+        myPixiPosRef.current = { x: p.pixiX, y: p.pixiY }
+        setMyPixiPos(myPixiPosRef.current)
+      }
     }
     app.ticker.add(tick)
     return () => { app.ticker.remove(tick) }
