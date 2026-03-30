@@ -403,7 +403,7 @@ export function useMovement(
     }
   }
 
-  return { player }
+  return { player, hoveredTile }
 }
 
 // ─────────────────────────────────────────
