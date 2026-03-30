@@ -399,7 +399,7 @@ export function useMovement(
     }
   }
 
-  return { player, hoveredTile }
+  return { player }
 }
 
 // ─────────────────────────────────────────
