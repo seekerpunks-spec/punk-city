@@ -1599,6 +1599,8 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.scale.set(1.8)
       ogClub.x = ogPos.x
       ogClub.y = ogPos.y
+      ogClub.eventMode = 'none'
+      ogClub.interactiveChildren = false
       // zIndex = front_row * 32 - 1 (front_row = 10)
       ogClub.zIndex = 10 * 32 - 1  // = 319
       world.addChild(ogClub)
