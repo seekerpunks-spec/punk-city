@@ -455,7 +455,8 @@ export function useCameraFollow(
 
       // Considère comme drag si déplacement > 5px
       if (Math.abs(dx) > 5 || Math.abs(dy) > 5) {
-        drag.current.moved = true
+        drag.current.moved       = true
+        drag.current.userDragged = true
         world.x = drag.current.startWorldX + dx
         world.y = drag.current.startWorldY + dy
       }
