@@ -473,7 +473,7 @@ export function useCameraFollow(
     // La caméra ne suit le joueur que quand il sort de la zone centrale
     const tick = () => {
       // Pas de suivi pendant le drag
-      if (drag.current.active && drag.current.moved) return
+      if (drag.current.active) return
 
       const p = player.current
 
