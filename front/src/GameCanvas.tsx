@@ -1588,7 +1588,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 
       // OG Club — col 4-5, row 9-10, ancré bas-centre tile (4,9)
       const ogClubBuf = await fetch('/og_club.gif').then(r => r.arrayBuffer())
-      const ogClub = AnimatedGIF.fromBuffer(ogClubBuf)
+      const ogClub = AnimatedGIF.fromBuffer(ogClubBuf, { animationSpeed: 1, autoPlay: true, loop: true })
       const ogPos = isoToScreen(4, 9)
       ogClub.anchor.set(0.5, 1)
       ogClub.scale.set(1.8)
