@@ -1910,7 +1910,7 @@ async function buildPlayerSprite(world: Container, app: Application): Promise<Gr
     spritesNe.visible = false
   }
 
-  app.ticker.add(() => {
+  const playerTick = () => {
     const dx = g.x - lastX
     const dy = g.y - lastY
     const moving = Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5
