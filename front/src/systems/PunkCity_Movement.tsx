@@ -232,13 +232,11 @@ export function useMovement(
       if (!isInBounds(gridPos.x, gridPos.y)) {
         if (hoverMarker.current) hoverMarker.current.visible = false
         lastHoverX = -1; lastHoverY = -1
-        setHoveredTile(null)
         return
       }
 
       if (gridPos.x === lastHoverX && gridPos.y === lastHoverY) return
       lastHoverX = gridPos.x; lastHoverY = gridPos.y
-      setHoveredTile({ x: gridPos.x, y: gridPos.y })
 
       if (!hoverMarker.current) {
         hoverMarker.current = new Graphics()
