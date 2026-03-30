@@ -869,6 +869,11 @@ function InnerGame({
     playerRef.current.moving = false
     playerGfx.x = x
     playerGfx.y = y
+
+    // Centre la caméra sur le joueur au spawn
+    world.x = app.screen.width  / 2 - x * world.scale.x
+    world.y = app.screen.height / 2 - y * world.scale.y
+
     reportMove(spawnX, spawnY, x, y, 'sw')
     changeRoom(roomId)
   }, [reportMove, changeRoom])
