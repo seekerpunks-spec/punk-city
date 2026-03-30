@@ -469,59 +469,12 @@ export function useCameraFollow(
     app.stage.on('pointerup',   onPointerUp)
     app.stage.on('pointerupoutside', onPointerUp)
 
-    // ── Ticker — suivi intelligent ────────
-    // La caméra ne suit le joueur que quand il sort de la zone centrale
-    const tick = () => {
-      // Pas de suivi pendant le drag
-      if (drag.current.active) return
-
-      const p = player.current
-
-      // Position du joueur à l'écran (en pixels écran)
-      const playerScreenX = world.x + p.pixiX * world.scale.x
-      const playerScreenY = world.y + p.pixiY * world.scale.y
-
-      const screenW = app.screen.width
-      const screenH = app.screen.height
-
-      // Zone centrale — si le joueur est dans cette zone, la caméra ne bouge pas
-      const marginX = screenW * 0.35  // 35% de chaque côté
-      const marginY = screenH * 0.35
-
-      const minX = marginX
-      const maxX = screenW - marginX
-      const minY = marginY
-      const maxY = screenH - marginY
-
-      // Calcule le déplacement nécessaire pour ramener le joueur dans la zone
-      let targetX = world.x
-      let targetY = world.y
-
-      if (playerScreenX < minX) {
-        targetX = world.x + (minX - playerScreenX)
-      } else if (playerScreenX > maxX) {
-        targetX = world.x + (maxX - playerScreenX)
-      }
-
-      if (playerScreenY < minY) {
-        targetY = world.y + (minY - playerScreenY)
-      } else if (playerScreenY > maxY) {
-        targetY = world.y + (maxY - playerScreenY)
-      }
-
-      // Lerp vers la position cible
-      world.x += (targetX - world.x) * lerpSpeed
-      world.y += (targetY - world.y) * lerpSpeed
-    }
-    app.ticker.add(tick)
-
     return () => {
       app.canvas.removeEventListener('wheel', onWheel)
       app.stage.off('pointerdown', onPointerDown)
       app.stage.off('pointermove', onPointerMove)
       app.stage.off('pointerup',   onPointerUp)
       app.stage.off('pointerupoutside', onPointerUp)
-      app.ticker.remove(tick)
     }
   }, [app, world])
 }
