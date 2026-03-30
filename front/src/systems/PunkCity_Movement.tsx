@@ -252,8 +252,8 @@ export function useMovement(
         x,              y + TILE_H,
         x - TILE_W / 2, y + TILE_H / 2,
       ])
-      h.fill({ color: 0xB421F3, alpha: 0.25 })
-      h.stroke({ color: 0xB421F3, width: 2, alpha: 0.9 })
+      h.fill({ color: 0xB421F3, alpha: 0.08 })
+      h.stroke({ color: 0xB421F3, width: 1.5, alpha: 0.55 })
       h.visible = true
     }
 
