@@ -1787,7 +1787,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       }
       window.addEventListener('resize', onResize)
 
-      setPixiReady({ app, world, playerGfx })
+      setPixiReady({ app, world, playerGfx, genesisSprites: genesisBuildingsRef.current })
     })()
 
     // Cleanup retourné directement à React — appelé à chaque unmount/hot reload
