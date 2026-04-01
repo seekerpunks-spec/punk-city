@@ -1712,7 +1712,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       // Seeker Eleven — 5 rows sous OG Club (col 3, row 7+5 = row 12)
       const seekerBuf = await fetch('/seeker_eleven.gif').then(r => r.arrayBuffer())
       const seeker = AnimatedGIF.fromBuffer(seekerBuf, { animationSpeed: 1, autoPlay: true, loop: true })
-      const seekerPos = isoToScreen(3, 12)
+      const seekerPos = isoToScreen(3, 22)
       seeker.texture.source.scaleMode = 'nearest'
       seeker.anchor.set(0.5, 1)
       seeker.scale.set(1.8)
