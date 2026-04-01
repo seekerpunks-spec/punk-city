@@ -1674,8 +1674,25 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       if (destroyed || !mountRef.current) return
       mountRef.current.appendChild(app.canvas)
 
+      // Background parallaxe — derrière le world
+      const bgTexture = await Assets.load('/city_bg.png')
+      const bg = new Sprite(bgTexture)
+      bg.anchor.set(0.5)
+      const scaleBg = () => {
+        const scaleX = app.screen.width  / bgTexture.width
+        const scaleY = app.screen.height / bgTexture.height
+        bg.scale.set(Math.max(scaleX, scaleY) * 1.2)
+        bg.x = app.screen.width  / 2
+        bg.y = app.screen.height / 2
+      }
+      scaleBg()
+      bg.zIndex = -1
+      app.stage.sortableChildren = true
+      app.stage.addChild(bg)
+
       const world = new Container()
       world.sortableChildren = true
+      world.zIndex = 0
       app.stage.addChild(world)
 
       const playerGfx = await buildPlayerSprite(world, app)
