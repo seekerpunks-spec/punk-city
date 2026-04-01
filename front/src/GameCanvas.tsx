@@ -1726,7 +1726,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       // Neon Market — col 19, row 0
       const neonMarketTex = await Assets.load('/neon_market.png')
       const neonMarket = new Sprite(neonMarketTex)
-      const neonMarketPos = isoToScreen(23, 2)
+      const neonMarketPos = isoToScreen(23, 3)
       neonMarket.texture.source.scaleMode = 'nearest'
       neonMarket.anchor.set(0.5, 1)
       neonMarket.scale.set(1.8)
