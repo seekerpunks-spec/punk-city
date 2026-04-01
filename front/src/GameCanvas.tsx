@@ -1659,6 +1659,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
     const app = new Application()
     let onResize: (() => void) | null = null
     let destroyed = false
+    let bgTick: (() => void) | null = null
     const preventNativeScroll = (e: TouchEvent) => e.preventDefault()
 
     ;(async () => {
