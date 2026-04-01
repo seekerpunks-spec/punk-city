@@ -1759,6 +1759,9 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       neonMarket.zIndex = 500
       world.addChild(neonMarket)
 
+      // Stocker les sprites Genesis Plaza pour toggle visibilité
+      genesisBuildingsRef.current = [bg, ogClub, gallery, seeker, neonMarket]
+
       // Bloque le scroll/bounce natif du navigateur mobile sur le canvas
       app.canvas.addEventListener('touchstart', preventNativeScroll, { passive: false })
       app.canvas.addEventListener('touchmove',  preventNativeScroll, { passive: false })
