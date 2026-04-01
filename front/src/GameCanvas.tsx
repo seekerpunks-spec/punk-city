@@ -1739,7 +1739,6 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       world.addChild(neonMarket)
 
       // Bloque le scroll/bounce natif du navigateur mobile sur le canvas
-      const preventNativeScroll = (e: TouchEvent) => e.preventDefault()
       app.canvas.addEventListener('touchstart', preventNativeScroll, { passive: false })
       app.canvas.addEventListener('touchmove',  preventNativeScroll, { passive: false })
 
