@@ -470,11 +470,10 @@ export function useCameraFollow(
     app.stage.on('pointerup',   onPointerUp)
     app.stage.on('pointerupoutside', onPointerUp)
 
-    // ── Ticker — scroll uniquement sur desktop quand le joueur sort de la zone visible ──
+    // ── Ticker — scroll quand le joueur sort de la zone visible ──
     const isMobile = window.innerHeight < 500 && window.innerWidth < 1024
-    const EDGE_MARGIN = 120
+    const EDGE_MARGIN = isMobile ? 60 : 120
     const tick = () => {
-      if (isMobile) return         // caméra 100% libre sur mobile
       if (drag.current.active) return
 
       const p = player.current
