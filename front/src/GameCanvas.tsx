@@ -1636,6 +1636,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       const ogClubBuf = await fetch('/og_club.gif').then(r => r.arrayBuffer())
       const ogClub = AnimatedGIF.fromBuffer(ogClubBuf, { animationSpeed: 1, autoPlay: true, loop: true })
       const ogPos = isoToScreen(3, 7)
+      ogClub.texture.source.scaleMode = 'nearest'
       ogClub.anchor.set(0.5, 1)
       ogClub.scale.set(1.8)
       ogClub.x = ogPos.x
