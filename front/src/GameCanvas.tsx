@@ -1646,6 +1646,19 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       ogClub.zIndex = 500
       world.addChild(ogClub)
 
+      // Gallery District — mur NE, ancré bas-centre tile (14, 2)
+      const galleryBuf = await fetch('/gallery_district.gif').then(r => r.arrayBuffer())
+      const gallery = AnimatedGIF.fromBuffer(galleryBuf, { animationSpeed: 1, autoPlay: true, loop: true })
+      const galleryPos = isoToScreen(14, 2)
+      gallery.anchor.set(0.5, 1)
+      gallery.scale.set(1.58)
+      gallery.x = galleryPos.x
+      gallery.y = galleryPos.y
+      gallery.eventMode = 'none'
+      gallery.interactiveChildren = false
+      gallery.zIndex = 500
+      world.addChild(gallery)
+
       onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
       window.addEventListener('resize', onResize)
 
