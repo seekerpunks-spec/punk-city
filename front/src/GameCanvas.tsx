@@ -1652,9 +1652,10 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
   const { isPortraitMobile } = useMobileOrientation()
 
   const [pixiReady, setPixiReady] = useState<{
-    app:       Application
-    world:     Container
-    playerGfx: Graphics
+    app:             Application
+    world:           Container
+    playerGfx:       Graphics
+    genesisSprites:  any[]
   } | null>(null)
 
   useEffect(() => {
