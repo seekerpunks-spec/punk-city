@@ -806,11 +806,13 @@ function InnerGame({
   world,
   playerGfx,
   config,
+  genesisSprites,
 }: {
-  app:       Application
-  world:     Container
-  playerGfx: Graphics
-  config:    GameConfig
+  app:            Application
+  world:          Container
+  playerGfx:      Graphics
+  config:         GameConfig
+  genesisSprites: any[]
 }) {
   // Ref vers le callback de position — permet de l'appeler depuis useChat sans stale closure
   const onPlayerMovedCbRef = useRef<(data: any) => void>(() => {})
