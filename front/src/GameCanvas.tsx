@@ -1346,6 +1346,16 @@ function InnerGame({
               col: {tileCoords.col} · row: {tileCoords.row}
             </div>
           )}
+          {/* Debug grid button */}
+          <button onClick={() => setShowGrid(v => !v)} style={{
+            position: 'fixed', bottom: 116, right: 16, zIndex: 2000,
+            background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: 4, color: showGrid ? '#B421F3' : '#666',
+            fontSize: 11, padding: '3px 8px', cursor: 'pointer', fontFamily: 'monospace',
+          }}>Grid</button>
+          {showGrid && <canvas ref={gridCanvasRef} style={{
+            position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1,
+          }} />}
           <ChatPanel
             messages={messages}
             myPlayerId={myPlayer?.id ?? ''}
