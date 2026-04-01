@@ -1709,6 +1709,20 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       gallery.zIndex = 500
       world.addChild(gallery)
 
+      // Seeker Eleven — 5 rows sous OG Club (col 3, row 7+5 = row 12)
+      const seekerBuf = await fetch('/seeker_eleven.gif').then(r => r.arrayBuffer())
+      const seeker = AnimatedGIF.fromBuffer(seekerBuf, { animationSpeed: 1, autoPlay: true, loop: true })
+      const seekerPos = isoToScreen(3, 12)
+      seeker.texture.source.scaleMode = 'nearest'
+      seeker.anchor.set(0.5, 1)
+      seeker.scale.set(1.8)
+      seeker.x = seekerPos.x
+      seeker.y = seekerPos.y
+      seeker.eventMode = 'none'
+      seeker.interactiveChildren = false
+      seeker.zIndex = 500
+      world.addChild(seeker)
+
       onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
       window.addEventListener('resize', onResize)
 
