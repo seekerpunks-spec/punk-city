@@ -883,6 +883,12 @@ function InnerGame({
   const { activeRoomId, activeRoom, transitioning, blockedTiles, loadRoom, checkDoors } =
     useRoomSystem(app, world, onRoomChange)
 
+  // Affiche les bâtiments/bg uniquement dans Genesis Plaza
+  useEffect(() => {
+    const visible = activeRoomId === 'genesis-plaza'
+    genesisSprites.forEach(s => { if (s) s.visible = visible })
+  }, [activeRoomId, genesisSprites])
+
   const { player: playerRef } = useMovement(app, world, playerGfx, blockedTiles)
 
   const [tileCoords, setTileCoords] = useState<{ col: number; row: number } | null>(null)
