@@ -1772,7 +1772,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
           lastWorldY = world.y
         }
       }
-      app.ticker.add(bgTick)
+      app.ticker.add(bgTick!)
 
       onResize = () => {
         app.renderer.resize(window.innerWidth, window.innerHeight)
