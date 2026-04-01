@@ -1651,7 +1651,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       const gallery = AnimatedGIF.fromBuffer(galleryBuf, { animationSpeed: 1, autoPlay: true, loop: true })
       const galleryPos = isoToScreen(14, 2)
       gallery.anchor.set(0.5, 1)
-      gallery.scale.set(1.58)
+      gallery.scale.set(1.8)
       gallery.x = galleryPos.x
       gallery.y = galleryPos.y
       gallery.eventMode = 'none'
