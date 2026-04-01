@@ -1214,6 +1214,44 @@ function InnerGame({
   const onPlayerClickRef = useRef<(id: string, username: string) => void>(() => {})
   onPlayerClickRef.current = (id: string, username: string) => setSelectedPlayer({ id, username })
 
+  // ── Debug grid overlay ──
+  const [showGrid, setShowGrid] = useState(false)
+  const gridCanvasRef = useRef<HTMLCanvasElement>(null)
+  useEffect(() => {
+    if (!showGrid) return
+    const canvas = gridCanvasRef.current
+    if (!canvas) return
+    const draw = () => {
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      canvas.width  = window.innerWidth
+      canvas.height = window.innerHeight
+      ctx.clearRect(0, 0, canvas.width, canvas.height)
+      const TILE_W = 64, TILE_H = 32
+      ctx.strokeStyle = 'rgba(180,33,243,0.35)'
+      ctx.lineWidth = 0.5
+      for (let col = 0; col < 24; col++) {
+        for (let row = 0; row < 24; row++) {
+          const sx = (col - row) * (TILE_W / 2)
+          const sy = (col + row) * (TILE_H / 2)
+          const wx = world.x + sx * world.scale.x
+          const wy = world.y + sy * world.scale.y
+          const hw = (TILE_W / 2) * world.scale.x
+          const hh = (TILE_H / 2) * world.scale.y
+          ctx.beginPath()
+          ctx.moveTo(wx,      wy)
+          ctx.lineTo(wx + hw, wy + hh)
+          ctx.lineTo(wx,      wy + hh * 2)
+          ctx.lineTo(wx - hw, wy + hh)
+          ctx.closePath()
+          ctx.stroke()
+        }
+      }
+    }
+    const ticker = app.ticker.add(draw)
+    return () => { app.ticker.remove(ticker) }
+  }, [showGrid, app, world])
+
   // ── Position temps réel du joueur local ──
   const [myPixiPos, setMyPixiPos] = useState({ x: 0, y: 0 })
   const myPixiPosRef = useRef({ x: 0, y: 0 })
