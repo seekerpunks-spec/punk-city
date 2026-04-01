@@ -1723,6 +1723,20 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       seeker.zIndex = 500
       world.addChild(seeker)
 
+      // Neon Market — col 19, row 0
+      const neonMarketTex = await Assets.load('/neon_market.png')
+      const neonMarket = new Sprite(neonMarketTex)
+      const neonMarketPos = isoToScreen(19, 0)
+      neonMarket.texture.source.scaleMode = 'nearest'
+      neonMarket.anchor.set(0.5, 1)
+      neonMarket.scale.set(1.8)
+      neonMarket.x = neonMarketPos.x
+      neonMarket.y = neonMarketPos.y
+      neonMarket.eventMode = 'none'
+      neonMarket.interactiveChildren = false
+      neonMarket.zIndex = 500
+      world.addChild(neonMarket)
+
       onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
       window.addEventListener('resize', onResize)
 
