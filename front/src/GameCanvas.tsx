@@ -1789,7 +1789,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       if (onResize) window.removeEventListener('resize', onResize)
       app.canvas.removeEventListener('touchstart', preventNativeScroll)
       app.canvas.removeEventListener('touchmove',  preventNativeScroll)
-      app.ticker.remove(bgTick)
+      if (bgTick) app.ticker.remove(bgTick)
       app.destroy(true)
     }
   }, [])
