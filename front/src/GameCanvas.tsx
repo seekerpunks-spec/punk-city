@@ -1759,7 +1759,24 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       app.canvas.addEventListener('touchstart', preventNativeScroll, { passive: false })
       app.canvas.addEventListener('touchmove',  preventNativeScroll, { passive: false })
 
-      onResize = () => app.renderer.resize(window.innerWidth, window.innerHeight)
+      // Ticker parallaxe background
+      let lastWorldX = world.x, lastWorldY = world.y
+      const bgTick = () => {
+        if (world.x !== lastWorldX || world.y !== lastWorldY) {
+          const dx = world.x - lastWorldX
+          const dy = world.y - lastWorldY
+          bg.x += dx * 0.15
+          bg.y += dy * 0.15
+          lastWorldX = world.x
+          lastWorldY = world.y
+        }
+      }
+      app.ticker.add(bgTick)
+
+      onResize = () => {
+        app.renderer.resize(window.innerWidth, window.innerHeight)
+        scaleBg()
+      }
       window.addEventListener('resize', onResize)
 
       setPixiReady({ app, world, playerGfx })
