@@ -1762,7 +1762,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
 
       // Ticker parallaxe background
       let lastWorldX = world.x, lastWorldY = world.y
-      const bgTick = () => {
+      bgTick = () => {
         if (world.x !== lastWorldX || world.y !== lastWorldY) {
           const dx = world.x - lastWorldX
           const dy = world.y - lastWorldY
