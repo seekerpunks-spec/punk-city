@@ -1824,6 +1824,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
           world={pixiReady.world}
           playerGfx={pixiReady.playerGfx}
           config={config}
+          genesisSprites={pixiReady.genesisSprites}
         />
       )}
       {/* Écran de rotation portrait mobile */}
