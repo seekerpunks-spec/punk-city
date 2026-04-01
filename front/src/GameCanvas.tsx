@@ -1650,7 +1650,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
       // Gallery District — mur NE, ancré bas-centre tile (14, 2)
       const galleryBuf = await fetch('/gallery_district.gif').then(r => r.arrayBuffer())
       const gallery = AnimatedGIF.fromBuffer(galleryBuf, { animationSpeed: 1, autoPlay: true, loop: true })
-      const galleryPos = isoToScreen(9, 2)
+      const galleryPos = isoToScreen(11, 2)
       gallery.texture.source.scaleMode = 'nearest'
       gallery.anchor.set(0.5, 1)
       gallery.scale.set(3)
