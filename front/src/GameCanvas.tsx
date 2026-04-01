@@ -1248,8 +1248,8 @@ function InnerGame({
         }
       }
     }
-    const ticker = app.ticker.add(draw)
-    return () => { app.ticker.remove(ticker) }
+    app.ticker.add(draw)
+    return () => { app.ticker.remove(draw) }
   }, [showGrid, app, world])
 
   // ── Position temps réel du joueur local ──
