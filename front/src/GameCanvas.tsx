@@ -835,6 +835,9 @@ function InnerGame({
     onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
   })
 
+  // ── Sprites Genesis Plaza uniquement ─────
+  const genesisBuildingsRef = useRef<any[]>([])
+
   // ── Autres joueurs ───────────────────────
   // Déclaré ICI (avant onRoomChange) pour pouvoir nettoyer les sprites
   // de façon synchrone lors d'un changement de room.
