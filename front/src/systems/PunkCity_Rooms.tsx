@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
+import { Application, Container, Graphics, Sprite, Text, TextStyle, Assets, Texture } from 'pixi.js'
 
 // ─────────────────────────────────────────
 // TYPES
