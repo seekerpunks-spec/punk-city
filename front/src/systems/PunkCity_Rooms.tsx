@@ -71,7 +71,8 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
     description: 'The central plaza of Punk City. Everything starts here.',
     cols:        24,
     rows:        24,
-    ambientColor: 0x0d0d1a,
+    ambientColor:  0x0d0d1a,
+    floorTexture:  '/tiles_genesis.png',
     theme: {
       floorA:    0x1a1a2e,
       floorB:    0x16213e,
