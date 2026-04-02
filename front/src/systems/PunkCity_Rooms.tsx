@@ -72,7 +72,7 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
     cols:        24,
     rows:        24,
     ambientColor:  0x0d0d1a,
-    floorTexture:  '/tiles_genesis.png',
+    floorTextures: ['/tile_genesis_1.png', '/tile_genesis_2.png', '/tile_genesis_3.png', '/tile_genesis_4.png'],
     theme: {
       floorA:    0x1a1a2e,
       floorB:    0x16213e,
