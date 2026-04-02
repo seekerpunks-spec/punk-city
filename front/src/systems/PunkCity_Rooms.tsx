@@ -423,6 +423,28 @@ function renderRoom(container: Container, config: RoomConfig, floorTexture: Text
 // DRAWERS — TILES
 // ─────────────────────────────────────────
 
+function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Texture): Container {
+  const c = new Container()
+  const { x, y } = isoToScreen(gx, gy)
+  const d = theme.depth
+
+  // Face top — sprite (PNG 64×32 = taille exacte du diamant)
+  const sprite = new Sprite(texture)
+  sprite.x = x - TILE_W / 2
+  sprite.y = y
+  c.addChild(sprite)
+
+  // Faces latérales (cube depth)
+  const sides = new Graphics()
+  sides.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x - TILE_W / 2, y + TILE_H / 2 + d])
+  sides.fill(theme.wallLeft)
+  sides.poly([x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x + TILE_W / 2, y + TILE_H / 2 + d])
+  sides.fill(theme.wallRight)
+  c.addChild(sides)
+
+  return c
+}
+
 function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
