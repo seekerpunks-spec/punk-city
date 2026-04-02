@@ -438,18 +438,13 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, textures: Tex
   const texture    = textures[hash % textures.length]
   const shouldFlip = (hash >> 2) % 2 === 1
 
-  // Face top — polygone élargi de 0.5px sur chaque côté (+1px total) pour combler les gaps
-  // Matrix ajustée pour couvrir exactement la zone élargie
+  // Face top — texture appliquée sur la forme diamant via matrix
+  // Flip horizontal : a=-1 et tx décalé de TILE_W pour inverser l'origine
   const matrix = shouldFlip
-    ? { a: -1, b: 0, c: 0, d: 1, tx: x + TILE_W / 2 + 0.5, ty: y - 0.5 }
-    : { a:  1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2 - 0.5, ty: y - 0.5 }
+    ? { a: -1, b: 0, c: 0, d: 1, tx: x + TILE_W / 2, ty: y }
+    : { a:  1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y }
 
-  g.poly([
-    x,                     y - 0.5,
-    x + TILE_W / 2 + 0.5,  y + TILE_H / 2,
-    x,                     y + TILE_H + 0.5,
-    x - TILE_W / 2 - 0.5,  y + TILE_H / 2,
-  ])
+  g.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
   g.fill({ texture, matrix })
 
   // Faces latérales (cube depth)
