@@ -439,7 +439,7 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Text
   sprite.width  = TILE_W
   sprite.height = TILE_W * (texture.height / texture.width)
   sprite.x = x - TILE_W / 2
-  sprite.y = y
+  sprite.y = y - TILE_H / 2
 
   // Masque diamant pour clipper les coins rectangulaires du sprite
   const mask = new Graphics()
