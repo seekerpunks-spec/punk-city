@@ -430,8 +430,8 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Text
 
   // Sprite : largeur forcée à TILE_W, hauteur proportionnelle
   const sprite = new Sprite(texture)
-  sprite.width  = TILE_W
-  sprite.height = TILE_W * (texture.height / texture.width)
+  sprite.width  = TILE_W * 2
+  sprite.height = TILE_W * 2 * (texture.height / texture.width)
   sprite.x = x - TILE_W / 2
   sprite.y = y
 
