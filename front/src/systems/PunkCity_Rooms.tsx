@@ -428,8 +428,10 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Text
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
 
-  // Face top — sprite (PNG 64×32 = taille exacte du diamant)
+  // Face top — sprite forcé à TILE_W×TILE_H pour couvrir exactement le diamant
   const sprite = new Sprite(texture)
+  sprite.width  = TILE_W
+  sprite.height = TILE_H
   sprite.x = x - TILE_W / 2
   sprite.y = y
   c.addChild(sprite)
