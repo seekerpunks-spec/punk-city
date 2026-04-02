@@ -434,7 +434,8 @@ function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean, 
     x - TILE_W / 2, y + TILE_H / 2,
   ])
   if (floorTexture) {
-    g.fill({ texture: floorTexture, matrix: { a: 1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y } })
+    // Texture 32x64 → tile 64x32 : scaleX=2, scaleY=0.5
+    g.fill({ texture: floorTexture, matrix: { a: 2, b: 0, c: 0, d: 0.5, tx: x - TILE_W / 2, ty: y } })
   } else {
     g.fill(dark ? theme.floorA : theme.floorB)
   }
