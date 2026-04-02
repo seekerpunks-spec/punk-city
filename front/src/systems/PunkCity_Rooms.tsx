@@ -377,7 +377,7 @@ export function useRoomSystem(
 // RENDU D'UNE ROOM
 // ─────────────────────────────────────────
 
-function renderRoom(container: Container, config: RoomConfig) {
+function renderRoom(container: Container, config: RoomConfig, floorTexture: Texture | null = null) {
   const tileMap = buildTileMap(config.tiles)
   const theme   = config.theme
 
@@ -387,7 +387,7 @@ function renderRoom(container: Container, config: RoomConfig) {
       const tileData = tileMap.get(key)
       const type     = tileData?.type ?? 'floor'
 
-      let tile: Graphics
+      let tile: Container
 
       switch (type) {
         case 'wall':
@@ -400,7 +400,9 @@ function renderRoom(container: Container, config: RoomConfig) {
           tile = drawDecoTile(gx, gy, theme, tileData?.variant ?? 0)
           break
         default:
-          tile = drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
+          tile = floorTexture
+            ? drawFloorSprite(gx, gy, theme, floorTexture)
+            : drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
       }
 
       // Depth sort : les tiles du bas passent devant
