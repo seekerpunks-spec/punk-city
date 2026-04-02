@@ -317,14 +317,14 @@ export function useRoomSystem(
     world.addChild(roomContainer)
     roomContainerRef.current = roomContainer
 
-    // Charge les textures de sol si définies
-    let floorTextures: Texture[] = []
+    // Charge les 4 textures de sol (une par variante)
+    const floorTextures: Texture[] = []
     if (config.floorTextures?.length) {
-      floorTextures = await Promise.all(config.floorTextures.map(async path => {
+      for (const path of config.floorTextures) {
         const tex = await Assets.load(path)
         tex.source.scaleMode = 'nearest'
-        return tex
-      }))
+        floorTextures.push(tex)
+      }
     }
 
     // Render tiles
