@@ -421,7 +421,7 @@ function renderRoom(container: Container, config: RoomConfig, floorTexture: Text
 // DRAWERS — TILES
 // ─────────────────────────────────────────
 
-function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean): Graphics {
+function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean, floorTexture: Texture | null = null): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
@@ -433,7 +433,11 @@ function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean):
     x,              y + TILE_H,
     x - TILE_W / 2, y + TILE_H / 2,
   ])
-  g.fill(dark ? theme.floorA : theme.floorB)
+  if (floorTexture) {
+    g.fill({ texture: floorTexture, matrix: { a: 1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y } })
+  } else {
+    g.fill(dark ? theme.floorA : theme.floorB)
+  }
   g.stroke({ color: theme.accent, width: 0.4, alpha: 0.2 })
 
   // Face gauche
