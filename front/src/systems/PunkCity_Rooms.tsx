@@ -380,7 +380,7 @@ export function useRoomSystem(
 // RENDU D'UNE ROOM
 // ─────────────────────────────────────────
 
-function renderRoom(container: Container, config: RoomConfig, floorTexture: Texture | null = null) {
+function renderRoom(container: Container, config: RoomConfig, floorTextures: Texture[] = []) {
   const tileMap = buildTileMap(config.tiles)
   const theme   = config.theme
 
@@ -403,9 +403,12 @@ function renderRoom(container: Container, config: RoomConfig, floorTexture: Text
           tile = drawDecoTile(gx, gy, theme, tileData?.variant ?? 0)
           break
         default:
-          tile = floorTexture
-            ? drawFloorSprite(gx, gy, theme, floorTexture)
-            : drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
+          if (floorTextures.length > 0) {
+            const idx = (gx * 7 + gy * 13) % floorTextures.length
+            tile = drawFloorSprite(gx, gy, theme, floorTextures[idx])
+          } else {
+            tile = drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
+          }
       }
 
       // Depth sort : les tiles du bas passent devant
