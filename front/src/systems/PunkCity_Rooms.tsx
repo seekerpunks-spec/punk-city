@@ -11,7 +11,7 @@
  */
 
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Application, Container, Graphics, Text, TextStyle, Assets, Texture } from 'pixi.js'
+import { Application, Container, Graphics, Text, TextStyle } from 'pixi.js'
 
 // ─────────────────────────────────────────
 // TYPES
@@ -42,9 +42,8 @@ interface RoomConfig {
   theme:       RoomTheme
   doors:       DoorData[]
   tiles:       TileData[]   // tiles spéciales (murs, décos) — le reste est floor
-  bgMusic?:      string
-  ambientColor:  number
-  floorTexture?: string   // chemin vers une texture PNG pour les tiles floor
+  bgMusic?:    string
+  ambientColor: number
 }
 
 interface RoomTheme {
@@ -71,8 +70,7 @@ export const ROOMS_CONFIG: Record<string, RoomConfig> = {
     description: 'The central plaza of Punk City. Everything starts here.',
     cols:        24,
     rows:        24,
-    ambientColor:  0x0d0d1a,
-    floorTexture:  '/tiles_genesis.png',
+    ambientColor: 0x0d0d1a,
     theme: {
       floorA:    0x1a1a2e,
       floorB:    0x16213e,
@@ -317,15 +315,8 @@ export function useRoomSystem(
     world.addChild(roomContainer)
     roomContainerRef.current = roomContainer
 
-    // Charge la texture de tile si disponible pour cette room
-    let floorTexture: Texture | null = null
-    if (config.floorTexture) {
-      floorTexture = await Assets.load(config.floorTexture)
-      floorTexture.source.scaleMode = 'nearest'
-    }
-
     // Render tiles
-    renderRoom(roomContainer, config, floorTexture)
+    renderRoom(roomContainer, config)
 
     // Mise à jour des tiles bloquées pour le pathfinding
     setBlockedTiles(buildBlockedSet(config.tiles))
@@ -377,7 +368,7 @@ export function useRoomSystem(
 // RENDU D'UNE ROOM
 // ─────────────────────────────────────────
 
-function renderRoom(container: Container, config: RoomConfig, floorTexture: Texture | null = null) {
+function renderRoom(container: Container, config: RoomConfig) {
   const tileMap = buildTileMap(config.tiles)
   const theme   = config.theme
 
@@ -400,7 +391,7 @@ function renderRoom(container: Container, config: RoomConfig, floorTexture: Text
           tile = drawDecoTile(gx, gy, theme, tileData?.variant ?? 0)
           break
         default:
-          tile = drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0, floorTexture)
+          tile = drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
       }
 
       // Depth sort : les tiles du bas passent devant
@@ -421,7 +412,7 @@ function renderRoom(container: Container, config: RoomConfig, floorTexture: Text
 // DRAWERS — TILES
 // ─────────────────────────────────────────
 
-function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean, floorTexture: Texture | null = null): Graphics {
+function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
@@ -433,12 +424,7 @@ function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean, 
     x,              y + TILE_H,
     x - TILE_W / 2, y + TILE_H / 2,
   ])
-  if (floorTexture) {
-    // Texture 32x64 → tile 64x32 : scaleX=2, scaleY=0.5
-    g.fill({ texture: floorTexture, matrix: { a: 2, b: 0, c: 0, d: 0.5, tx: x - TILE_W / 2, ty: y } })
-  } else {
-    g.fill(dark ? theme.floorA : theme.floorB)
-  }
+  g.fill(dark ? theme.floorA : theme.floorB)
   g.stroke({ color: theme.accent, width: 0.4, alpha: 0.2 })
 
   // Face gauche
