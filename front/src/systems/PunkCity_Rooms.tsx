@@ -317,8 +317,15 @@ export function useRoomSystem(
     world.addChild(roomContainer)
     roomContainerRef.current = roomContainer
 
+    // Charge la texture de sol si définie
+    let floorTexture: Texture | null = null
+    if (config.floorTexture) {
+      floorTexture = await Assets.load(config.floorTexture)
+      floorTexture.source.scaleMode = 'nearest'
+    }
+
     // Render tiles
-    renderRoom(roomContainer, config)
+    renderRoom(roomContainer, config, floorTexture)
 
     // Mise à jour des tiles bloquées pour le pathfinding
     setBlockedTiles(buildBlockedSet(config.tiles))
