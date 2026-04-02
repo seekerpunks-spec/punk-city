@@ -428,10 +428,10 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Text
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
 
-  // Sprite forcé à TILE_W×TILE_H
+  // Sprite : largeur forcée à TILE_W, hauteur proportionnelle
   const sprite = new Sprite(texture)
   sprite.width  = TILE_W
-  sprite.height = TILE_H
+  sprite.height = TILE_W * (texture.height / texture.width)
   sprite.x = x - TILE_W / 2
   sprite.y = y
 
