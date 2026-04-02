@@ -429,35 +429,23 @@ function renderRoom(container: Container, config: RoomConfig, floorTextures: Tex
 // DRAWERS — TILES
 // ─────────────────────────────────────────
 
-function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Texture): Container {
-  const c = new Container()
+function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Texture): Graphics {
+  const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
 
-  // Sprite : largeur forcée à TILE_W, hauteur proportionnelle
-  const sprite = new Sprite(texture)
-  sprite.width  = TILE_W
-  sprite.height = TILE_W * (texture.height / texture.width)
-  sprite.x = x - TILE_W / 2
-  sprite.y = y - TILE_H / 2
-
-  // Masque diamant pour clipper les coins rectangulaires du sprite
-  const mask = new Graphics()
-  mask.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
-  mask.fill(0xffffff)
-  sprite.mask = mask
-  c.addChild(mask)
-  c.addChild(sprite)
+  // Face top — texture appliquée directement sur la forme diamant
+  // Matrix : aligne (x-32, y) = coin haut-gauche du bounding box 64x32
+  g.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
+  g.fill({ texture, matrix: { a: 1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y } })
 
   // Faces latérales (cube depth)
-  const sides = new Graphics()
-  sides.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x - TILE_W / 2, y + TILE_H / 2 + d])
-  sides.fill(theme.wallLeft)
-  sides.poly([x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x + TILE_W / 2, y + TILE_H / 2 + d])
-  sides.fill(theme.wallRight)
-  c.addChild(sides)
+  g.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x - TILE_W / 2, y + TILE_H / 2 + d])
+  g.fill(theme.wallLeft)
+  g.poly([x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x + TILE_W / 2, y + TILE_H / 2 + d])
+  g.fill(theme.wallRight)
 
-  return c
+  return g
 }
 
 function drawFloorTile(gx: number, gy: number, theme: RoomTheme, dark: boolean): Graphics {
