@@ -404,8 +404,7 @@ function renderRoom(container: Container, config: RoomConfig, floorTextures: Tex
           break
         default:
           if (floorTextures.length > 0) {
-            const idx = (gx * 3 + gy * 7 + gx * gy) % floorTextures.length
-            tile = drawFloorSprite(gx, gy, theme, floorTextures[idx])
+            tile = drawFloorSprite(gx, gy, theme, floorTextures)
           } else {
             tile = drawFloorTile(gx, gy, theme, (gx + gy) % 2 === 0)
           }
