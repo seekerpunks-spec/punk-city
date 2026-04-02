@@ -317,15 +317,18 @@ export function useRoomSystem(
     world.addChild(roomContainer)
     roomContainerRef.current = roomContainer
 
-    // Charge la texture de sol si définie
-    let floorTexture: Texture | null = null
-    if (config.floorTexture) {
-      floorTexture = await Assets.load(config.floorTexture)
-      floorTexture.source.scaleMode = 'nearest'
+    // Charge les textures de sol si définies
+    let floorTextures: Texture[] = []
+    if (config.floorTextures?.length) {
+      floorTextures = await Promise.all(config.floorTextures.map(async path => {
+        const tex = await Assets.load(path)
+        tex.source.scaleMode = 'nearest'
+        return tex
+      }))
     }
 
     // Render tiles
-    renderRoom(roomContainer, config, floorTexture)
+    renderRoom(roomContainer, config, floorTextures)
 
     // Mise à jour des tiles bloquées pour le pathfinding
     setBlockedTiles(buildBlockedSet(config.tiles))
