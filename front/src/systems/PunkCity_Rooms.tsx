@@ -43,7 +43,8 @@ interface RoomConfig {
   doors:       DoorData[]
   tiles:       TileData[]   // tiles spéciales (murs, décos) — le reste est floor
   bgMusic?:    string
-  ambientColor: number
+  ambientColor:  number
+  floorTexture?: string   // chemin vers une texture PNG pour les tiles floor
 }
 
 interface RoomTheme {
