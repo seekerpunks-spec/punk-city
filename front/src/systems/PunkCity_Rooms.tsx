@@ -428,12 +428,19 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Text
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
 
-  // Face top — sprite forcé à TILE_W×TILE_H pour couvrir exactement le diamant
+  // Sprite forcé à TILE_W×TILE_H
   const sprite = new Sprite(texture)
   sprite.width  = TILE_W
   sprite.height = TILE_H
   sprite.x = x - TILE_W / 2
   sprite.y = y
+
+  // Masque diamant pour clipper les coins rectangulaires du sprite
+  const mask = new Graphics()
+  mask.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
+  mask.fill(0xffffff)
+  sprite.mask = mask
+  c.addChild(mask)
   c.addChild(sprite)
 
   // Faces latérales (cube depth)
