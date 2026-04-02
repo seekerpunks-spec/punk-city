@@ -428,15 +428,24 @@ function renderRoom(container: Container, config: RoomConfig, floorTextures: Tex
 // DRAWERS — TILES
 // ─────────────────────────────────────────
 
-function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, texture: Texture): Graphics {
+function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, textures: Texture[]): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
   const d = theme.depth
 
-  // Face top — texture appliquée directement sur la forme diamant
-  // Matrix : aligne (x-32, y) = coin haut-gauche du bounding box 64x32
+  // Hash pseudo-aléatoire stable
+  const hash       = ((gx * 2654435761) ^ (gy * 2246822519)) >>> 0
+  const texture    = textures[hash % textures.length]
+  const shouldFlip = (hash >> 2) % 2 === 1
+
+  // Face top — texture appliquée sur la forme diamant via matrix
+  // Flip horizontal : a=-1 et tx décalé de TILE_W pour inverser l'origine
+  const matrix = shouldFlip
+    ? { a: -1, b: 0, c: 0, d: 1, tx: x + TILE_W / 2, ty: y }
+    : { a:  1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y }
+
   g.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
-  g.fill({ texture, matrix: { a: 1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y } })
+  g.fill({ texture, matrix })
 
   // Faces latérales (cube depth)
   g.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x - TILE_W / 2, y + TILE_H / 2 + d])
