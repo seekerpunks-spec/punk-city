@@ -220,7 +220,11 @@ export function useCameraSystem(
     }
 
     app.ticker.add(tick)
-    return () => { app.ticker.remove(tick) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
+    }
   }, [app, world])
 
   // ── API publique ─────────────────────────

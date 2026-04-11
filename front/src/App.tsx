@@ -201,9 +201,15 @@ export default function App() {
   const onJoinFailed = useCallback((message: string) => {
     const p = playAuthRef.current
     if (!p?.registerUsername) return
-    setResumeReg({ sessionId: p.sessionId, message })
-    setRetryKey(k => k + 1)
-    setPlayAuth(null)
+    const sessionId = p.sessionId
+    /* Deux rAF : laisse le ticker Pixi / React finir la frame avant démontage (évite .remove sur null) */
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setResumeReg({ sessionId, message })
+        setRetryKey(k => k + 1)
+        setPlayAuth(null)
+      })
+    })
   }, [])
 
   if (!playAuth) {

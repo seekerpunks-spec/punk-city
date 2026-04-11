@@ -846,6 +846,18 @@ function InnerGame({
     onJoinError:      config.onJoinFailed,
   })
 
+  // buildPlayerSprite enregistre un ticker sur app — obligatoire de le retirer avant app.destroy()
+  useEffect(() => {
+    return () => {
+      const t = (playerGfx as { _ticker?: () => void })._ticker
+      try {
+        if (t && app.ticker) app.ticker.remove(t)
+      } catch {
+        /* app déjà détruit */
+      }
+    }
+  }, [app, playerGfx])
+
   // ── Autres joueurs ───────────────────────
   // Déclaré ICI (avant onRoomChange) pour pouvoir nettoyer les sprites
   // de façon synchrone lors d'un changement de room.
@@ -915,7 +927,13 @@ function InnerGame({
       }
     }
     canvas.addEventListener('mousemove', onMouseMove)
-    return () => canvas.removeEventListener('mousemove', onMouseMove)
+    return () => {
+      try {
+        canvas.removeEventListener('mousemove', onMouseMove)
+      } catch {
+        /* canvas déjà détruit */
+      }
+    }
   }, [app, world])
 
   useEffect(() => {
@@ -939,7 +957,11 @@ function InnerGame({
       }
     }
     app.ticker.add(tick)
-    return () => { app.ticker.remove(tick) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
+    }
   }, [checkDoors, reportMove])
 
   useCameraFollow(app, world, playerRef)
@@ -980,7 +1002,11 @@ function InnerGame({
       })
     }
     app.ticker.add(tick)
-    return () => { app.ticker.remove(tick) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
+    }
   }, [])
 
 
@@ -1143,7 +1169,11 @@ function InnerGame({
     }
 
     app.stage.on('pointerdown', onStageDown)
-    return () => { app.stage.off('pointerdown', onStageDown) }
+    return () => {
+      try {
+        app.stage?.off('pointerdown', onStageDown)
+      } catch { /* noop */ }
+    }
   }, [])
 
   // ── Survol : pseudo en bulle au-dessus de l'autre joueur ─────────────────
@@ -1169,8 +1199,12 @@ function InnerGame({
     app.stage.on('pointermove', onStageMove)
     app.canvas.addEventListener('pointerleave', onCanvasLeave)
     return () => {
-      app.stage.off('pointermove', onStageMove)
-      app.canvas.removeEventListener('pointerleave', onCanvasLeave)
+      try {
+        app.stage?.off('pointermove', onStageMove)
+      } catch { /* noop */ }
+      try {
+        app.canvas?.removeEventListener('pointerleave', onCanvasLeave)
+      } catch { /* noop */ }
     }
   }, [app, world])
 
@@ -1294,7 +1328,11 @@ function InnerGame({
       }
     }
     app.ticker.add(draw)
-    return () => { app.ticker.remove(draw) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(draw)
+      } catch { /* noop */ }
+    }
   }, [showGrid, app, world])
 
   // ── Position temps réel du joueur local ──
@@ -1310,7 +1348,11 @@ function InnerGame({
       }
     }
     app.ticker.add(tick)
-    return () => { app.ticker.remove(tick) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
+    }
   }, [])
 
   return (
@@ -1840,10 +1882,24 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
     return () => {
       destroyed = true
       if (onResize) window.removeEventListener('resize', onResize)
-      app.canvas.removeEventListener('touchstart', preventNativeScroll)
-      app.canvas.removeEventListener('touchmove',  preventNativeScroll)
-      if (bgTick) app.ticker.remove(bgTick)
-      app.destroy(true)
+      try {
+        if (app.canvas) {
+          app.canvas.removeEventListener('touchstart', preventNativeScroll)
+          app.canvas.removeEventListener('touchmove',  preventNativeScroll)
+        }
+      } catch {
+        /* canvas absent si init pas finie */
+      }
+      try {
+        if (bgTick && app.ticker) app.ticker.remove(bgTick)
+      } catch {
+        /* noop */
+      }
+      try {
+        app.destroy(true)
+      } catch {
+        /* renderer déjà détruit */
+      }
     }
   }, [])
 

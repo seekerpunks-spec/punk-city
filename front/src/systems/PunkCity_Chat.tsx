@@ -303,7 +303,7 @@ export function useChat(options: UseChatOptions) {
       console.error('[Punk City]', err.message)
       if (options.registerUsername && onJoinErrorRef.current) {
         onJoinErrorRef.current(err.message)
-        socket.disconnect()
+        queueMicrotask(() => { try { socket.disconnect() } catch { /* noop */ } })
       }
     })
 

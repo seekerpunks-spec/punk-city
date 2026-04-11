@@ -295,9 +295,11 @@ export function useMovement(
     app.stage.eventMode = 'static'
 
     return () => {
-      app.stage.off('pointermove', onPointerMove)
-      app.stage.off('pointerdown', onPointerDown)
-      app.stage.off('pointerup', onClick)
+      try {
+        app.stage?.off('pointermove', onPointerMove)
+        app.stage?.off('pointerdown', onPointerDown)
+        app.stage?.off('pointerup', onClick)
+      } catch { /* stage détruit */ }
     }
   }, [app, world, blocked])
 
@@ -347,7 +349,11 @@ export function useMovement(
     }
 
     app.ticker.add(tick)
-    return () => { app.ticker.remove(tick) }
+    return () => {
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
+    }
   }, [app, playerSprite])
 
   // ── Marqueur de destination ──────────────
@@ -492,12 +498,18 @@ export function useCameraFollow(
     app.ticker.add(tick)
 
     return () => {
-      app.canvas.removeEventListener('wheel', onWheel)
-      app.stage.off('pointerdown', onPointerDown)
-      app.stage.off('pointermove', onPointerMove)
-      app.stage.off('pointerup',   onPointerUp)
-      app.stage.off('pointerupoutside', onPointerUp)
-      app.ticker.remove(tick)
+      try {
+        app.canvas?.removeEventListener('wheel', onWheel)
+      } catch { /* noop */ }
+      try {
+        app.stage?.off('pointerdown', onPointerDown)
+        app.stage?.off('pointermove', onPointerMove)
+        app.stage?.off('pointerup',   onPointerUp)
+        app.stage?.off('pointerupoutside', onPointerUp)
+      } catch { /* noop */ }
+      try {
+        if (app.ticker) app.ticker.remove(tick)
+      } catch { /* noop */ }
     }
   }, [app, world])
 }
