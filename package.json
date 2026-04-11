@@ -1,12 +1,18 @@
 {
+  "name": "punk-city",
+  "private": true,
+  "engines": {
+    "node": ">=20"
+  },
   "devDependencies": {
     "@types/react": "^19.2.14",
     "concurrently": "^9.2.1"
   },
   "scripts": {
-    "start": "concurrently \"npm run dev:frontend\" \"npm run dev:backend\"",
-    "dev:frontend": "cd front && npm run dev",
-    "dev:backend": "cd back && npm run dev",
-    "postinstall": "cd front && npm install && cd ../back && npm install"
+    "postinstall": "npm install --prefix front && npm install --prefix back",
+    "build": "npm run build --prefix front",
+    "start": "npm run start --prefix back",
+    "dev": "concurrently \"npm run dev --prefix front\" \"npm run dev --prefix back\"",
+    "postinstall:local": "cd front && npm install && cd ../back && npm install"
   }
 }

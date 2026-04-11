@@ -3,6 +3,9 @@
  * Stack: Node.js + TypeScript + Socket.io
  */
 
+import fs               from 'fs'
+import path             from 'path'
+import { fileURLToPath } from 'url'
 import express          from 'express'
 import { createServer } from 'http'
 import { Server, Socket } from 'socket.io'
@@ -130,9 +133,22 @@ const io = new Server(server, {
   cors: { origin: '*', methods: ['GET', 'POST'] },
 })
 
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const frontDist = path.join(__dirname, '../front/dist')
+
+app.set('trust proxy', 1)
 app.use(cors())
 app.use(express.json())
 app.get('/health', (_, res) => res.json({ status: 'ok', players: players.size }))
+
+if (fs.existsSync(path.join(frontDist, 'index.html'))) {
+  app.use(express.static(frontDist))
+  app.get('*', (_req, res) => {
+    res.sendFile(path.join(frontDist, 'index.html'))
+  })
+  console.log(`[http] Front statique → ${frontDist}`)
+}
 
 io.on('connection', (socket: Socket) => {
   console.log(`[+] Connection: ${socket.id}`)

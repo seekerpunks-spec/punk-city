@@ -39,10 +39,12 @@ export async function initDatabase(): Promise<void> {
     )
   }
   if (pool) return
+  const onHeroku = !!process.env.DYNO
   pool = new pg.Pool({
     connectionString,
     max:             20,
     idleTimeoutMillis: 30_000,
+    ssl:             onHeroku ? { rejectUnauthorized: false } : undefined,
   })
   pool.on('error', err => {
     console.error('[db] Erreur pool PostgreSQL', err)

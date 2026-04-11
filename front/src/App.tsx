@@ -9,6 +9,7 @@
 
 import React, { useState } from 'react'
 import GameCanvas from './GameCanvas'
+import { getSocketServerUrl } from './serverUrl'
 
 // ─────────────────────────────────────────
 // ÉCRAN DE CONNEXION
@@ -121,7 +122,7 @@ export default function App() {
   return (
     <GameCanvas
       config={{
-        serverUrl: 'http://localhost:3001',
+        serverUrl: getSocketServerUrl(),
         username,
         avatar:    'default',       // à remplacer par NFT mint Solana
         roomId:    'genesis-plaza',
