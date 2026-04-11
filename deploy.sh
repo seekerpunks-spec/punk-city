@@ -7,7 +7,8 @@ ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
 HEROKU_APP="${HEROKU_APP:-}"
-BRANCH="${BRANCH:-main}"
+# Par défaut : branche courante → heroku/main (évite de pousser un vieux main local)
+BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 
 if ! command -v heroku &>/dev/null; then
   echo "Installe la CLI Heroku : https://devcenter.heroku.com/articles/heroku-cli"
