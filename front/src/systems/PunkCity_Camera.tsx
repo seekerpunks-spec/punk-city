@@ -13,8 +13,6 @@ import {
   Application,
   Container,
   Graphics,
-  Sprite,
-  Ticker,
   FederatedPointerEvent,
 } from 'pixi.js'
 

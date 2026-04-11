@@ -10,8 +10,8 @@
  * 5. RoomUI             → Interface minimap + bouton changement district
  */
 
-import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { Application, Container, Graphics, Sprite, Text, TextStyle, Assets, Texture } from 'pixi.js'
+import { useEffect, useRef, useState, useCallback } from 'react'
+import { Application, Container, Graphics, Assets, Texture } from 'pixi.js'
 
 // ─────────────────────────────────────────
 // TYPES

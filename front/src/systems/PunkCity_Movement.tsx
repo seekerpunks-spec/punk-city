@@ -9,7 +9,7 @@
  * 4. GameCanvas        → Composant React principal
  */
 
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef } from 'react'
 import { Application, Container, Graphics, Sprite, Ticker } from 'pixi.js'
 
 // ─────────────────────────────────────────
@@ -18,14 +18,12 @@ import { Application, Container, Graphics, Sprite, Ticker } from 'pixi.js'
 
 const TILE_W = 64
 const TILE_H = 32
-const TILE_DEPTH = 8        // hauteur des faces latérales
 const WALK_SPEED = 2.5      // pixels par frame
 const GRID_COLS = 24
 const GRID_ROWS = 24
 
 // Marge en pixels avant que la caméra commence à suivre le joueur
 // Si le joueur est dans cette zone centrale, la caméra ne bouge pas
-const FOLLOW_MARGIN = 150
 
 // ─────────────────────────────────────────
 // TYPES
@@ -412,7 +410,6 @@ export function useCameraFollow(
   app: Application | null,
   world: Container | null,
   player: React.MutableRefObject<PlayerState>,
-  lerpSpeed = 0.08
 ) {
   // État du drag
   const drag = useRef({
