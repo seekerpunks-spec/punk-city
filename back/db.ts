@@ -22,6 +22,7 @@ export interface UserProfile {
   inventory:      string[]
   createdAt:      number
   updatedAt:      number
+  walletAddress?: string | null
 }
 
 let pool: pg.Pool | null = null
@@ -73,6 +74,22 @@ async function migrate(p: pg.Pool) {
       PRIMARY KEY (user_low, user_high)
     );
   `)
+  await p.query(`
+    ALTER TABLE users ADD COLUMN IF NOT EXISTS wallet_address TEXT;
+  `)
+  /* Anciennes lignes Ethereum brutes (0x…) → préfixe eth: pour cohabitation avec sol: */
+  await p.query(`
+    UPDATE users
+    SET wallet_address = 'eth:' || lower(wallet_address)
+    WHERE wallet_address IS NOT NULL
+      AND wallet_address ~ '^0x[0-9a-fA-F]{40}$';
+  `)
+  await p.query(`DROP INDEX IF EXISTS idx_users_wallet_lower;`)
+  await p.query(`
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_wallet
+    ON users (wallet_address)
+    WHERE wallet_address IS NOT NULL;
+  `)
 }
 
 function sortedPair(a: string, b: string): [string, string] {
@@ -102,36 +119,69 @@ function rowToProfile(row: {
     }
   }
   return {
-    username:    row.username,
-    displayName: row.display_name,
-    avatar:      row.avatar,
-    bio:         row.bio ?? '',
-    neonCredits: Number(row.neon_credits),
+    username:      row.username,
+    displayName:   row.display_name,
+    avatar:        row.avatar,
+    bio:           row.bio ?? '',
+    neonCredits:   Number(row.neon_credits),
     inventory,
-    createdAt:   Number(row.created_at),
-    updatedAt:   Number(row.updated_at),
+    createdAt:     Number(row.created_at),
+    updatedAt:     Number(row.updated_at),
+    walletAddress: (row as { wallet_address?: string }).wallet_address ?? null,
   }
 }
 
-export async function upsertUserOnJoin(
-  normalizedUsername: string,
+/** walletKey = eth:0x… ou sol:Base58… (voir walletAuth côté serveur) */
+export async function findUserByWallet(walletKey: string): Promise<UserProfile | null> {
+  const p = getPool()
+  const { rows } = await p.query(
+    'SELECT * FROM users WHERE wallet_address = $1',
+    [walletKey],
+  )
+  if (!rows[0]) return null
+  return rowToProfile(rows[0] as Parameters<typeof rowToProfile>[0])
+}
+
+export async function isUsernameTaken(normalizedUsername: string): Promise<boolean> {
+  const p = getPool()
+  const { rowCount } = await p.query('SELECT 1 FROM users WHERE username = $1', [normalizedUsername])
+  return (rowCount ?? 0) > 0
+}
+
+export async function insertUserWithWallet(
+  walletLower: string,
   displayName: string,
   avatar: string,
 ): Promise<UserProfile> {
+  const trimmed = displayName.trim()
+  const norm = normalizeUsername(trimmed)
+  if (trimmed.length < 2 || trimmed.length > 20) {
+    throw new Error('Pseudo : 2 à 20 caractères')
+  }
+  if (!/^[a-zA-Z0-9_\-]+$/.test(trimmed)) {
+    throw new Error('Pseudo : lettres, chiffres, _ et - uniquement')
+  }
+  if (await isUsernameTaken(norm)) {
+    throw new Error('Ce pseudo est déjà pris')
+  }
   const p = getPool()
   const now = Date.now()
   await p.query(
     `
-    INSERT INTO users (username, display_name, avatar, bio, neon_credits, inventory_json, created_at, updated_at)
-    VALUES ($1, $2, $3, '', $4, '[]'::jsonb, $5, $6)
-    ON CONFLICT (username) DO UPDATE SET
-      display_name = EXCLUDED.display_name,
-      avatar = EXCLUDED.avatar,
-      updated_at = EXCLUDED.updated_at
+    INSERT INTO users (username, display_name, wallet_address, avatar, bio, neon_credits, inventory_json, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, '', $5, '[]'::jsonb, $6, $7)
     `,
-    [normalizedUsername, displayName.slice(0, 64), avatar.slice(0, 64), DEFAULT_CREDITS, now, now],
+    [norm, trimmed.slice(0, 64), walletLower, avatar.slice(0, 64), DEFAULT_CREDITS, now, now],
   )
-  return getUserOrThrow(normalizedUsername)
+  return getUserOrThrow(norm)
+}
+
+export async function updateUserAvatarOnly(normalizedUsername: string, avatar: string): Promise<void> {
+  const p = getPool()
+  await p.query(
+    'UPDATE users SET avatar = $1, updated_at = $2 WHERE username = $3',
+    [avatar.slice(0, 64), Date.now(), normalizedUsername],
+  )
 }
 
 export async function getUserOrThrow(normalizedUsername: string): Promise<UserProfile> {

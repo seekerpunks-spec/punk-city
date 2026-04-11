@@ -5,6 +5,7 @@
 
 import fs               from 'fs'
 import path             from 'path'
+import { randomBytes } from 'crypto'
 import { fileURLToPath } from 'url'
 import express          from 'express'
 import { createServer } from 'http'
@@ -13,12 +14,25 @@ import cors             from 'cors'
 import {
   initDatabase,
   normalizeUsername,
-  upsertUserOnJoin,
   saveUserProgress,
   addFriendship,
   getFriendNormalizedUsernames,
   getUserOrThrow,
+  findUserByWallet,
+  insertUserWithWallet,
+  updateUserAvatarOnly,
 } from './db.js'
+import {
+  isEvmAddress,
+  ethereumStorageKey,
+  isSolanaAddress,
+  normalizeSolanaAddress,
+  solanaStorageKey,
+  buildLoginMessageEthereum,
+  buildLoginMessageSolana,
+  verifyWalletSignature,
+  verifySolanaSignature,
+} from './walletAuth.js'
 
 interface Player {
   id:        string
@@ -83,6 +97,9 @@ const inventories           = new Map<string, string[]>()     // socketId → it
 /** pseudo normalisé (lowercase) → socket.id — pour résoudre amis en ligne */
 const usernameToSocketId    = new Map<string, string>()
 
+const authNonces   = new Map<string, { nonce: string; exp: number }>()
+const authSessions = new Map<string, { wallet: string; exp: number }>()
+
 const rooms = new Map<string, Room>([
   ['genesis-plaza',    { id: 'genesis-plaza',    name: 'Genesis Plaza',    players: new Map(), history: [] }],
   ['neon-market',      { id: 'neon-market',       name: 'Neon Market',      players: new Map(), history: [] }],
@@ -142,6 +159,104 @@ app.use(cors())
 app.use(express.json())
 app.get('/health', (_, res) => res.json({ status: 'ok', players: players.size }))
 
+// ── Auth wallet (avant connexion socket) ─────────────────────────────────
+app.get('/api/auth/nonce', (req, res) => {
+  const address = String(req.query.address ?? '')
+  const chain = String(req.query.chain ?? 'ethereum').toLowerCase()
+  const nonce = randomBytes(16).toString('hex')
+  const exp = Date.now() + 10 * 60 * 1000
+
+  if (chain === 'solana' || chain === 'sol') {
+    if (!isSolanaAddress(address)) {
+      return res.status(400).json({ error: 'Adresse Solana invalide' })
+    }
+    const key = solanaStorageKey(address)
+    authNonces.set(key, { nonce, exp })
+    return res.json({ nonce })
+  }
+
+  if (!isEvmAddress(address)) {
+    return res.status(400).json({ error: 'Adresse Ethereum invalide' })
+  }
+  const key = ethereumStorageKey(address)
+  authNonces.set(key, { nonce, exp })
+  res.json({ nonce })
+})
+
+app.post('/api/auth/verify', async (req, res) => {
+  try {
+    const { address, signature, message, chain } = req.body ?? {}
+    const c = String(chain ?? 'ethereum').toLowerCase()
+
+    if (c === 'solana' || c === 'sol') {
+      const addr = String(address ?? '')
+      if (!isSolanaAddress(addr)) {
+        return res.status(400).json({ error: 'Adresse Solana invalide' })
+      }
+      const walletKey = solanaStorageKey(addr)
+      const entry = authNonces.get(walletKey)
+      if (!entry || entry.exp < Date.now()) {
+        return res.status(401).json({ error: 'Nonce expiré — redemande un nonce' })
+      }
+      const canonical = normalizeSolanaAddress(addr)
+      const expected = buildLoginMessageSolana(canonical, entry.nonce)
+      if (String(message) !== expected) {
+        return res.status(400).json({ error: 'Message de signature incorrect' })
+      }
+      if (!verifySolanaSignature(canonical, String(message), String(signature))) {
+        return res.status(401).json({ error: 'Signature invalide' })
+      }
+      authNonces.delete(walletKey)
+
+      const existing = await findUserByWallet(walletKey)
+      const sessionId = randomBytes(32).toString('hex')
+      authSessions.set(sessionId, { wallet: walletKey, exp: Date.now() + 24 * 60 * 60 * 1000 })
+
+      if (existing) {
+        return res.json({
+          sessionId,
+          registered: true,
+          username:   existing.displayName,
+        })
+      }
+      return res.json({ sessionId, registered: false })
+    }
+
+    if (!isEvmAddress(String(address))) {
+      return res.status(400).json({ error: 'Adresse Ethereum invalide' })
+    }
+    const walletKey = ethereumStorageKey(String(address))
+    const entry = authNonces.get(walletKey)
+    if (!entry || entry.exp < Date.now()) {
+      return res.status(401).json({ error: 'Nonce expiré — redemande un nonce' })
+    }
+    const expected = buildLoginMessageEthereum(String(address), entry.nonce)
+    if (String(message) !== expected) {
+      return res.status(400).json({ error: 'Message de signature incorrect' })
+    }
+    if (!verifyWalletSignature(String(address), String(message), String(signature))) {
+      return res.status(401).json({ error: 'Signature invalide' })
+    }
+    authNonces.delete(walletKey)
+
+    const existing = await findUserByWallet(walletKey)
+    const sessionId = randomBytes(32).toString('hex')
+    authSessions.set(sessionId, { wallet: walletKey, exp: Date.now() + 24 * 60 * 60 * 1000 })
+
+    if (existing) {
+      return res.json({
+        sessionId,
+        registered: true,
+        username:   existing.displayName,
+      })
+    }
+    return res.json({ sessionId, registered: false })
+  } catch (e) {
+    console.error('[auth/verify]', e)
+    return res.status(500).json({ error: 'Erreur serveur' })
+  }
+})
+
 if (fs.existsSync(path.join(frontDist, 'index.html'))) {
   app.use(express.static(frontDist))
   // Express 5 / path-to-regexp v8 : plus de app.get('*') — fallback SPA
@@ -159,17 +274,45 @@ io.on('connection', (socket: Socket) => {
   console.log(`[+] Connection: ${socket.id}`)
 
   socket.on('player:join', async (data: {
-    username: string; avatar: string; roomId: string
-    gridX: number; gridY: number; direction: string
+    sessionId:         string
+    registerUsername?: string
+    avatar:            string
+    roomId:            string
+    gridX:             number
+    gridY:             number
+    direction:         string
   }) => {
     const roomId = data.roomId || 'genesis-plaza'
     const room   = rooms.get(roomId)
     if (!room) return socket.emit('error', { message: 'Room not found' })
 
     try {
-      const displayUsername = (data.username?.trim() || `Punk_${generateId()}`).slice(0, 64)
-      const norm            = normalizeUsername(displayUsername)
-      const profile         = await upsertUserOnJoin(norm, displayUsername, data.avatar || 'default')
+      const sess = data.sessionId ? authSessions.get(data.sessionId) : undefined
+      if (!sess || sess.exp < Date.now()) {
+        return socket.emit('error', { message: 'Session expirée — reconnecte ton wallet (étape auth)' })
+      }
+      const wallet = sess.wallet
+      sess.exp     = Date.now() + 24 * 60 * 60 * 1000
+
+      let profile = await findUserByWallet(wallet)
+      if (!profile) {
+        const raw = data.registerUsername?.trim()
+        if (!raw) {
+          return socket.emit('error', { message: 'Choisis un pseudo pour ta première connexion' })
+        }
+        try {
+          profile = await insertUserWithWallet(wallet, raw, data.avatar || 'default')
+        } catch (e: unknown) {
+          const msg = e instanceof Error ? e.message : 'Inscription impossible'
+          return socket.emit('error', { message: msg })
+        }
+      } else {
+        await updateUserAvatarOnly(profile.username, data.avatar || 'default')
+        profile = await getUserOrThrow(profile.username)
+      }
+
+      const displayUsername = profile.displayName
+      const norm            = profile.username
 
       const player: Player = {
         id:        socket.id,

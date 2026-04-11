@@ -20,10 +20,14 @@ import { useRoomSystem, Minimap, RoomInfo, RoomTransitionOverlay } from './syste
 import { PlayerNameTooltip } from './systems/Tooltip'
 
 interface GameConfig {
-  serverUrl: string
-  username:  string
-  avatar:    string
-  roomId:    string
+  serverUrl:         string
+  sessionId:         string
+  /** Affichage HUD — doit correspondre au compte après join */
+  username:          string
+  /** Première connexion uniquement : enregistrement du pseudo lié au wallet */
+  registerUsername?: string
+  avatar:              string
+  roomId:              string
 }
 
 // ─────────────────────────────────────────
@@ -830,10 +834,11 @@ function InnerGame({
     updateTradeOffer, confirmTrade, cancelTrade,
     neonCredits, inventory, shopCatalog, buyItem, openShop,
   } = useChat({
-    serverUrl:     config.serverUrl,
-    username:      config.username,
-    avatar:        config.avatar,
-    roomId:        config.roomId,
+    serverUrl:        config.serverUrl,
+    sessionId:        config.sessionId,
+    registerUsername: config.registerUsername,
+    avatar:           config.avatar,
+    roomId:           config.roomId,
     // Bypass React state pour les updates de position à 60fps → plus de téléportation
     onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
   })

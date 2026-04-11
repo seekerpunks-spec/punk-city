@@ -11,6 +11,8 @@
   },
   "dependencies": {
     "@pixi/gif": "^3.0.1",
+    "@solana/web3.js": "^1.98.4",
+    "ethers": "^6.16.0",
     "pixi.js": "^8.17.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",

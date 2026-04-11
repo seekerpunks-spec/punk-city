@@ -48,12 +48,13 @@ interface Player {
 }
 
 interface UseChatOptions {
-  serverUrl: string
-  username:  string
-  avatar:    string
-  roomId:    string
-  gridX?:    number
-  gridY?:    number
+  serverUrl:        string
+  sessionId:        string
+  registerUsername?: string
+  avatar:           string
+  roomId:           string
+  gridX?:           number
+  gridY?:           number
   // Callback direct (bypass React state) pour les updates de position à 60fps
   onPlayerMoved?: (data: { id: string; gridX: number; gridY: number; pixiX: number; pixiY: number; direction: string }) => void
 }
@@ -115,14 +116,14 @@ export function useChat(options: UseChatOptions) {
 
     socket.on('connect', () => {
       setConnected(true)
-      // Rejoint la room avec son profil
       socket.emit('player:join', {
-        username:  options.username,
-        avatar:    options.avatar,
-        roomId:    options.roomId,
-        gridX:     options.gridX ?? 5,
-        gridY:     options.gridY ?? 5,
-        direction: 'sw',
+        sessionId:        options.sessionId,
+        registerUsername: options.registerUsername,
+        avatar:           options.avatar,
+        roomId:           options.roomId,
+        gridX:            options.gridX ?? 5,
+        gridY:            options.gridY ?? 5,
+        direction:        'sw',
       })
     })
 
@@ -298,7 +299,7 @@ export function useChat(options: UseChatOptions) {
     })
 
     return () => { socket.disconnect() }
-  }, [options.serverUrl, options.username, options.roomId])
+  }, [options.serverUrl, options.sessionId, options.registerUsername, options.roomId, options.avatar, options.gridX, options.gridY])
 
   // ── Envoyer un message ─────────────────
   const sendMessage = useCallback((text: string) => {
@@ -987,7 +988,7 @@ export default function ChatIntegration() {
     sendEmote,
   } = useChat({
     serverUrl: 'http://localhost:3001',
-    username:  'SeekerPunk_001',
+    sessionId: 'demo-session-id',
     avatar:    'default',
     roomId:    'genesis-plaza',
   })
