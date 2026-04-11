@@ -9,10 +9,9 @@
     "concurrently": "^9.2.1"
   },
   "scripts": {
-    "postinstall": "npm install --prefix front && npm install --prefix back",
+    "postinstall": "npm install --prefix front --include=dev && npm install --prefix back --include=dev",
     "build": "npm run build --prefix front",
     "start": "npm run start --prefix back",
-    "dev": "concurrently \"npm run dev --prefix front\" \"npm run dev --prefix back\"",
-    "postinstall:local": "cd front && npm install && cd ../back && npm install"
+    "dev": "concurrently \"npm run dev --prefix front\" \"npm run dev --prefix back\""
   }
 }
