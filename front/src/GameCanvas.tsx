@@ -17,6 +17,7 @@ const STATIC_CATALOG: ShopItem[] = [
   { id: 'item_4', name: 'Cyber Desk',     price: 200, emoji: '🖥️' },
 ]
 import { useRoomSystem, Minimap, RoomInfo, RoomTransitionOverlay } from './systems/PunkCity_Rooms'
+import { PlayerNameTooltip } from './systems/Tooltip'
 
 interface GameConfig {
   serverUrl: string
@@ -1137,6 +1138,34 @@ function InnerGame({
     return () => { app.stage.off('pointerdown', onStageDown) }
   }, [])
 
+  // ── Survol : pseudo en bulle au-dessus de l'autre joueur ─────────────────
+  const [hoveredOtherPlayer, setHoveredOtherPlayer] = useState<{ id: string; username: string } | null>(null)
+  useEffect(() => {
+    const onStageMove = (e: { globalX: number; globalY: number }) => {
+      const localPos = world.toLocal({ x: e.globalX, y: e.globalY })
+      let hovered: { id: string; username: string } | null = null
+      otherSprites.current.forEach((container, id) => {
+        if (!container || !container._walkGif) return
+        const px = container._walkGif.x
+        const py = container._walkGif.y
+        const dx = Math.abs(localPos.x - px)
+        const dy = py - localPos.y
+        if (dx < 45 && dy > -10 && dy < 110) {
+          hovered = { id, username: container._username }
+        }
+      })
+      setHoveredOtherPlayer(hovered)
+    }
+    const onCanvasLeave = () => { setHoveredOtherPlayer(null) }
+
+    app.stage.on('pointermove', onStageMove)
+    app.canvas.addEventListener('pointerleave', onCanvasLeave)
+    return () => {
+      app.stage.off('pointermove', onStageMove)
+      app.canvas.removeEventListener('pointerleave', onCanvasLeave)
+    }
+  }, [app, world])
+
   // Nettoyage au démontage — évite les sprites orphelins après HMR ou re-mount
   useEffect(() => {
     return () => {
@@ -1395,6 +1424,13 @@ function InnerGame({
           <FloatingMessages key={p.id} messages={floatingMsgs.get(p.id) ?? []} pixiX={px} pixiY={py} world={world} />
         )
       })}
+
+      <PlayerNameTooltip
+        playerId={hoveredOtherPlayer?.id ?? null}
+        username={hoveredOtherPlayer?.username ?? ''}
+        world={world}
+        spritesRef={otherSprites}
+      />
 
       {/* Boutons appartement — visibles uniquement dans un appartement */}
       {activeRoomId.startsWith('apartment_') && (
