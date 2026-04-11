@@ -7,7 +7,7 @@
  * npm run dev
  */
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import GameCanvas from './GameCanvas'
 import { getSocketServerUrl } from './serverUrl'
 
