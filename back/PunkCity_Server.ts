@@ -7,6 +7,15 @@ import express          from 'express'
 import { createServer } from 'http'
 import { Server, Socket } from 'socket.io'
 import cors             from 'cors'
+import {
+  initDatabase,
+  normalizeUsername,
+  upsertUserOnJoin,
+  saveUserProgress,
+  addFriendship,
+  getFriendNormalizedUsernames,
+  getUserOrThrow,
+} from './db.js'
 
 interface Player {
   id:        string
@@ -67,7 +76,9 @@ const friendships           = new Map<string, Set<string>>()  // socketId → Se
 const pendingFriendRequests = new Map<string, Set<string>>()  // targetId → Set<requesterId>
 const activeTrades          = new Map<string, Trade>()
 const wallets               = new Map<string, number>()       // socketId → neonCredits
-const inventories           = new Map<string, string[]>()     // socketId → itemIds        // tradeId → Trade
+const inventories           = new Map<string, string[]>()     // socketId → itemIds
+/** pseudo normalisé (lowercase) → socket.id — pour résoudre amis en ligne */
+const usernameToSocketId    = new Map<string, string>()
 
 const rooms = new Map<string, Room>([
   ['genesis-plaza',    { id: 'genesis-plaza',    name: 'Genesis Plaza',    players: new Map(), history: [] }],
@@ -91,6 +102,27 @@ function getPlayersInRoom(roomId: string): Player[] {
   return Array.from(room.players.values())
 }
 
+async function buildFriendsPayload(friendNorms: string[]): Promise<{ id: string; username: string; online: boolean; roomId: string }[]> {
+  const out: { id: string; username: string; online: boolean; roomId: string }[] = []
+  for (const fn of friendNorms) {
+    const fsid = usernameToSocketId.get(fn)
+    const p = fsid ? players.get(fsid) : undefined
+    if (p) {
+      out.push({ id: p.id, username: p.username, online: true, roomId: p.roomId })
+    } else {
+      let display = fn
+      try {
+        const u = await getUserOrThrow(fn)
+        display = u.displayName
+      } catch {
+        /* ami en base sans ligne user — rare */
+      }
+      out.push({ id: `off:${fn}`, username: display, online: false, roomId: '' })
+    }
+  }
+  return out
+}
+
 const app    = express()
 const server = createServer(app)
 
@@ -105,7 +137,7 @@ app.get('/health', (_, res) => res.json({ status: 'ok', players: players.size })
 io.on('connection', (socket: Socket) => {
   console.log(`[+] Connection: ${socket.id}`)
 
-  socket.on('player:join', (data: {
+  socket.on('player:join', async (data: {
     username: string; avatar: string; roomId: string
     gridX: number; gridY: number; direction: string
   }) => {
@@ -113,54 +145,89 @@ io.on('connection', (socket: Socket) => {
     const room   = rooms.get(roomId)
     if (!room) return socket.emit('error', { message: 'Room not found' })
 
-    const player: Player = {
-      id:        socket.id,
-      username:  data.username  || `Punk_${generateId()}`,
-      avatar:    data.avatar    || 'default',
-      roomId,
-      gridX:     data.gridX    ?? 5,
-      gridY:     data.gridY    ?? 5,
-      direction: data.direction || 'sw',
-    }
+    try {
+      const displayUsername = (data.username?.trim() || `Punk_${generateId()}`).slice(0, 64)
+      const norm            = normalizeUsername(displayUsername)
+      const profile         = await upsertUserOnJoin(norm, displayUsername, data.avatar || 'default')
 
-    players.set(socket.id, player)
-    room.players.set(socket.id, player)
-    socket.join(roomId)
+      const player: Player = {
+        id:        socket.id,
+        username:  displayUsername,
+        avatar:    profile.avatar,
+        roomId,
+        gridX:     data.gridX    ?? 5,
+        gridY:     data.gridY    ?? 5,
+        direction: data.direction || 'sw',
+      }
 
-    // Wallet + inventory initiaux
-    wallets.set(socket.id, 500)
-    inventories.set(socket.id, [])
+      players.set(socket.id, player)
+      room.players.set(socket.id, player)
+      socket.join(roomId)
 
-    // Crée l'appartement du joueur s'il n'existe pas encore
-    const aptRoomId = `apartment_${player.username}`
-    if (!rooms.has(aptRoomId)) {
-      rooms.set(aptRoomId, {
-        id:      aptRoomId,
-        name:    `${player.username}'s Apartment`,
-        players: new Map(),
-        history: [],
+      usernameToSocketId.set(norm, socket.id)
+
+      wallets.set(socket.id, profile.neonCredits)
+      inventories.set(socket.id, [...profile.inventory])
+
+      const friendNorms = await getFriendNormalizedUsernames(norm)
+
+      for (const fn of friendNorms) {
+        const fsid = usernameToSocketId.get(fn)
+        if (fsid) {
+          if (!friendships.has(socket.id)) friendships.set(socket.id, new Set())
+          friendships.get(socket.id)!.add(fsid)
+          if (!friendships.has(fsid)) friendships.set(fsid, new Set())
+          friendships.get(fsid)!.add(socket.id)
+        }
+      }
+
+      for (const fn of friendNorms) {
+        const fsid = usernameToSocketId.get(fn)
+        if (fsid && fsid !== socket.id) {
+          io.to(fsid).emit('friend:online', {
+            username: player.username,
+            id:       socket.id,
+            roomId:   player.roomId,
+          })
+        }
+      }
+
+      const friendsPayload = await buildFriendsPayload(friendNorms)
+
+      const aptRoomId = `apartment_${player.username}`
+      if (!rooms.has(aptRoomId)) {
+        rooms.set(aptRoomId, {
+          id:      aptRoomId,
+          name:    `${player.username}'s Apartment`,
+          players: new Map(),
+          history: [],
+        })
+      }
+
+      socket.emit('player:joined', {
+        player,
+        players:      getPlayersInRoom(roomId),
+        history:      room.history,
+        neonCredits:  wallets.get(socket.id)!,
+        inventory:    inventories.get(socket.id)!,
+        shopCatalog:  SHOP_CATALOG,
+        friends:        friendsPayload,
       })
+
+      socket.to(roomId).emit('player:entered', player)
+
+      const sysMsg: ChatMessage = {
+        id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
+        text: `${player.username} joined ${room.name}`,
+        roomId, timestamp: Date.now(), type: 'system',
+      }
+      addToHistory(room, sysMsg)
+      io.to(roomId).emit('chat:message', sysMsg)
+      console.log(`[room:${roomId}] ${player.username} joined (${room.players.size} players)`)
+    } catch (err) {
+      console.error('[player:join]', err)
+      socket.emit('error', { message: 'Erreur base de données' })
     }
-
-    socket.emit('player:joined', {
-      player,
-      players:      getPlayersInRoom(roomId),
-      history:      room.history,
-      neonCredits:  wallets.get(socket.id)!,
-      inventory:    inventories.get(socket.id)!,
-      shopCatalog:  SHOP_CATALOG,
-    })
-
-    socket.to(roomId).emit('player:entered', player)
-
-    const sysMsg: ChatMessage = {
-      id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
-      text: `${player.username} joined ${room.name}`,
-      roomId, timestamp: Date.now(), type: 'system',
-    }
-    addToHistory(room, sysMsg)
-    io.to(roomId).emit('chat:message', sysMsg)
-    console.log(`[room:${roomId}] ${player.username} joined (${room.players.size} players)`)
   })
 
   socket.on('chat:send', (data: { text: string }) => {
@@ -296,7 +363,7 @@ io.on('connection', (socket: Socket) => {
     console.log(`[friend] ${sender.username} → ${target.username}`)
   })
 
-  socket.on('friend:accept', (data: { requesterId: string }) => {
+  socket.on('friend:accept', async (data: { requesterId: string }) => {
     const accepter  = players.get(socket.id)
     const requester = players.get(data.requesterId)
     if (!accepter || !requester) return
@@ -309,6 +376,12 @@ io.on('connection', (socket: Socket) => {
     if (!friendships.has(data.requesterId)) friendships.set(data.requesterId, new Set())
     friendships.get(socket.id)!.add(data.requesterId)
     friendships.get(data.requesterId)!.add(socket.id)
+
+    try {
+      await addFriendship(requester.username, accepter.username)
+    } catch (e) {
+      console.error('[friend:accept]', e)
+    }
 
     // Notifie le demandeur (B) que A a accepté
     io.to(data.requesterId).emit('friend:accepted', {
@@ -416,7 +489,7 @@ io.on('connection', (socket: Socket) => {
     io.to(partnerId).emit('trade:offer_updated', { tradeId: data.tradeId, offer, credits })
   })
 
-  socket.on('trade:confirm', (data: { tradeId: string }) => {
+  socket.on('trade:confirm', async (data: { tradeId: string }) => {
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     const isA = trade.playerAId === socket.id
@@ -471,6 +544,15 @@ io.on('connection', (socket: Socket) => {
         ...(trade.creditsA > 0 ? [`₦${trade.creditsA}`] : []),
       ]
 
+      const pa = players.get(trade.playerAId)
+      const pb = players.get(trade.playerBId)
+      try {
+        if (pa) await saveUserProgress(normalizeUsername(pa.username), newWalA, newInvA)
+        if (pb) await saveUserProgress(normalizeUsername(pb.username), newWalB, newInvB)
+      } catch (e) {
+        console.error('[trade:confirm] save', e)
+      }
+
       io.to(trade.playerAId).emit('trade:completed', {
         tradeId: data.tradeId, inventory: newInvA, neonCredits: newWalA, catalog: SHOP_CATALOG,
         received: descA,
@@ -513,7 +595,7 @@ io.on('connection', (socket: Socket) => {
     })
   })
 
-  socket.on('buy_item', (data: { itemId: string }) => {
+  socket.on('buy_item', async (data: { itemId: string }) => {
     const item = SHOP_CATALOG.find(i => i.id === data.itemId)
     if (!item) return
     const credits   = wallets.get(socket.id) ?? 0
@@ -522,6 +604,18 @@ io.on('connection', (socket: Socket) => {
     if (inventory.includes(item.id)) return socket.emit('buy_item_error', { message: 'You already own this item.' })
     wallets.set(socket.id, credits - item.price)
     inventories.set(socket.id, [...inventory, item.id])
+    const p = players.get(socket.id)
+    if (p) {
+      try {
+        await saveUserProgress(
+          normalizeUsername(p.username),
+          wallets.get(socket.id)!,
+          inventories.get(socket.id)!,
+        )
+      } catch (e) {
+        console.error('[buy_item]', e)
+      }
+    }
     socket.emit('buy_item_success', {
       itemId:      item.id,
       neonCredits: wallets.get(socket.id)!,
@@ -530,9 +624,23 @@ io.on('connection', (socket: Socket) => {
     console.log(`[shop] ${players.get(socket.id)?.username} bought ${item.name} for ${item.price}₦`)
   })
 
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     const player = players.get(socket.id)
     if (!player) return
+
+    try {
+      await saveUserProgress(
+        normalizeUsername(player.username),
+        wallets.get(socket.id) ?? 0,
+        inventories.get(socket.id) ?? [],
+      )
+    } catch (e) {
+      console.error('[disconnect] save', e)
+    }
+    usernameToSocketId.delete(normalizeUsername(player.username))
+
+    friendships.forEach(set => set.delete(socket.id))
+
     const room = rooms.get(player.roomId)
     if (room) {
       room.players.delete(socket.id)
@@ -567,10 +675,17 @@ io.on('connection', (socket: Socket) => {
 })
 
 const PORT = process.env.PORT || 3001
-server.listen(PORT, () => {
-  console.log(`🏙️  Punk City server running on port ${PORT}`)
-  console.log(`📡  Active rooms : ${[...rooms.keys()].join(', ')}`)
-})
+initDatabase()
+  .then(() => {
+    server.listen(PORT, () => {
+      console.log(`🏙️  Punk City server running on port ${PORT}`)
+      console.log(`📡  Active rooms : ${[...rooms.keys()].join(', ')}`)
+    })
+  })
+  .catch(err => {
+    console.error(err)
+    process.exit(1)
+  })
 
 export { io, rooms, players }
 export type { Player, ChatMessage, Room }

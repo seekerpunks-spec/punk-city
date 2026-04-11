@@ -136,6 +136,7 @@ export function useChat(options: UseChatOptions) {
       neonCredits: number
       inventory:   string[]
       shopCatalog: ShopItem[]
+      friends?:     { id: string; username: string; online: boolean; roomId: string }[]
     }) => {
       setMyPlayer(data.player)
       setPlayers(data.players)
@@ -143,6 +144,7 @@ export function useChat(options: UseChatOptions) {
       setNeonCredits(data.neonCredits ?? 500)
       setInventory(data.inventory ?? [])
       setShopCatalog(data.shopCatalog ?? [])
+      if (data.friends) setFriends(data.friends)
     })
 
     socket.on('shop_data', (data: { items: ShopItem[]; neonCredits: number; inventory: string[] }) => {
@@ -214,6 +216,15 @@ export function useChat(options: UseChatOptions) {
 
     socket.on('friend:status', (data: { id: string; roomId: string }) => {
       setFriends(prev => prev.map(f => f.id === data.id ? { ...f, roomId: data.roomId } : f))
+    })
+
+    socket.on('friend:online', (data: { username: string; id: string; roomId: string }) => {
+      const key = data.username.trim().toLowerCase()
+      setFriends(prev => prev.map(f =>
+        f.username === data.username || f.id === `off:${key}`
+          ? { id: data.id, username: data.username, online: true, roomId: data.roomId }
+          : f
+      ))
     })
 
     socket.on('friend:declined', (_data: { byId: string; byUsername: string }) => {})
