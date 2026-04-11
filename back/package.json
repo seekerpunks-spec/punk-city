@@ -9,5 +9,8 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
     "ts-node": "^10.9.2"
+  },
+  "scripts": {
+    "dev": "ts-node ./PunkCity_Server.ts"
   }
 }
