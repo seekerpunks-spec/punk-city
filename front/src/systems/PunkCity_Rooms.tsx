@@ -11,7 +11,7 @@
  */
 
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Application, Container, Graphics, Assets, Texture } from 'pixi.js'
+import { Application, Container, Graphics, Assets, Texture, Matrix } from 'pixi.js'
 
 // ─────────────────────────────────────────
 // TYPES
@@ -431,7 +431,7 @@ function renderRoom(container: Container, config: RoomConfig, floorTextures: Tex
 function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, textures: Texture[]): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
-  const d = theme.depth
+  const depth = theme.depth
 
   // Hash pseudo-aléatoire stable
   const hash       = ((gx * 2654435761) ^ (gy * 2246822519)) >>> 0
@@ -441,16 +441,16 @@ function drawFloorSprite(gx: number, gy: number, theme: RoomTheme, textures: Tex
   // Face top — texture appliquée sur la forme diamant via matrix
   // Flip horizontal : a=-1 et tx décalé de TILE_W pour inverser l'origine
   const matrix = shouldFlip
-    ? { a: -1, b: 0, c: 0, d: 1, tx: x + TILE_W / 2, ty: y }
-    : { a:  1, b: 0, c: 0, d: 1, tx: x - TILE_W / 2, ty: y }
+    ? new Matrix(-1, 0, 0, 1, x + TILE_W / 2, y)
+    : new Matrix(1, 0, 0, 1, x - TILE_W / 2, y)
 
   g.poly([x, y, x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x - TILE_W / 2, y + TILE_H / 2])
   g.fill({ texture, matrix })
 
   // Faces latérales (cube depth)
-  g.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x - TILE_W / 2, y + TILE_H / 2 + d])
+  g.poly([x - TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + depth, x - TILE_W / 2, y + TILE_H / 2 + depth])
   g.fill(theme.wallLeft)
-  g.poly([x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + d, x + TILE_W / 2, y + TILE_H / 2 + d])
+  g.poly([x + TILE_W / 2, y + TILE_H / 2, x, y + TILE_H, x, y + TILE_H + depth, x + TILE_W / 2, y + TILE_H / 2 + depth])
   g.fill(theme.wallRight)
 
   return g
@@ -496,7 +496,6 @@ function drawWallTile(gx: number, gy: number, theme: RoomTheme): Graphics {
   const g = new Graphics()
   const { x, y } = isoToScreen(gx, gy)
   const wallHeight = 32
-  const d = theme.depth
 
   // Base floor
   g.poly([
@@ -704,7 +703,6 @@ export function Minimap({ activeRoomId, onRoomClick }: MinimapProps) {
       }}>
         {MAP_LAYOUT.map(room => {
           const isActive = room.id === activeRoomId
-          const config   = ROOMS_CONFIG[room.id]
 
           return (
             <div

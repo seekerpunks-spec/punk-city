@@ -934,7 +934,7 @@ function InnerGame({
     return () => { app.ticker.remove(tick) }
   }, [checkDoors, reportMove])
 
-  useCameraFollow(app, world, playerRef, 0.08)
+  useCameraFollow(app, world, playerRef)
 
   // ── Interpolation mouvement autres joueurs ──────────
   useEffect(() => {
