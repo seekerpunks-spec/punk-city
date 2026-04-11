@@ -28,6 +28,8 @@ interface GameConfig {
   registerUsername?: string
   avatar:              string
   roomId:              string
+  /** Si `registerUsername` : échec d’inscription (ex. pseudo pris) → retour choix du pseudo */
+  onJoinFailed?: (message: string) => void
 }
 
 // ─────────────────────────────────────────
@@ -841,6 +843,7 @@ function InnerGame({
     roomId:           config.roomId,
     // Bypass React state pour les updates de position à 60fps → plus de téléportation
     onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
+    onJoinError:      config.onJoinFailed,
   })
 
   // ── Autres joueurs ───────────────────────

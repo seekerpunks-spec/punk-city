@@ -3,7 +3,7 @@
  * Auth wallet Ethereum ou Solana (Solflare / Phantom) + pseudo figé à la première connexion
  */
 
-import { useState } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import GameCanvas from './GameCanvas'
 import { getSocketServerUrl } from './serverUrl'
 import { connectWalletAndVerifySession, type WalletChain } from './walletAuth'
@@ -13,12 +13,28 @@ type AuthState =
   | { step: 'choose_name'; sessionId: string }
   | { step: 'play'; sessionId: string; username: string; registerUsername?: string }
 
-function LoginFlow({ onReady }: { onReady: (s: Extract<AuthState, { step: 'play' }>) => void }) {
-  const [auth, setAuth] = useState<AuthState>({ step: 'login' })
+function LoginFlow({
+  onReady,
+  resumeChooseName,
+}: {
+  onReady: (s: Extract<AuthState, { step: 'play' }>) => void
+  resumeChooseName: { sessionId: string; message: string } | null
+}) {
+  const [auth, setAuth] = useState<AuthState>(() =>
+    resumeChooseName
+      ? { step: 'choose_name', sessionId: resumeChooseName.sessionId }
+      : { step: 'login' },
+  )
   const [pseudo, setPseudo] = useState('')
+  const [err, setErr] = useState<string | null>(() => resumeChooseName?.message ?? null)
   const [loading, setLoading] = useState(false)
-  const [err, setErr] = useState<string | null>(null)
   const api = getSocketServerUrl()
+
+  useEffect(() => {
+    if (!resumeChooseName) return
+    setAuth({ step: 'choose_name', sessionId: resumeChooseName.sessionId })
+    setErr(resumeChooseName.message)
+  }, [resumeChooseName])
 
   const handleConnect = async (chain: WalletChain) => {
     setErr(null)
@@ -39,8 +55,8 @@ function LoginFlow({ onReady }: { onReady: (s: Extract<AuthState, { step: 'play'
 
   const handlePseudo = () => {
     const p = pseudo.trim()
-    if (p.length < 2 || p.length > 20) {
-      setErr('Pseudo : 2 à 20 caractères')
+    if (p.length < 5 || p.length > 20) {
+      setErr('Pseudo : 5 à 20 caractères')
       return
     }
     if (!/^[a-zA-Z0-9_-]+$/.test(p)) {
@@ -87,7 +103,21 @@ function LoginFlow({ onReady }: { onReady: (s: Extract<AuthState, { step: 'play'
               textAlign: 'center', fontFamily: 'monospace',
             }}
           />
-          {err && <div style={{ color: '#f66', fontSize: 11, marginBottom: 8 }}>{err}</div>}
+          {err && (
+            <div style={{
+              color:      '#f66',
+              fontSize:   11,
+              marginBottom: 12,
+              lineHeight: 1.4,
+              padding:    '8px 10px',
+              background: 'rgba(255,80,80,0.08)',
+              borderRadius: 8,
+              border:     '1px solid rgba(255,100,100,0.35)',
+            }}
+            >
+              {err}
+            </div>
+          )}
           <button
             type="button"
             onClick={handlePseudo}
@@ -161,21 +191,44 @@ function LoginFlow({ onReady }: { onReady: (s: Extract<AuthState, { step: 'play'
 }
 
 export default function App() {
-  const [auth, setAuth] = useState<Extract<AuthState, { step: 'play' }> | null>(null)
+  const [playAuth, setPlayAuth] = useState<Extract<AuthState, { step: 'play' }> | null>(null)
+  const [resumeReg, setResumeReg] = useState<{ sessionId: string; message: string } | null>(null)
+  const [retryKey, setRetryKey]   = useState(0)
 
-  if (!auth) {
-    return <LoginFlow onReady={setAuth} />
+  const playAuthRef = useRef(playAuth)
+  useEffect(() => { playAuthRef.current = playAuth }, [playAuth])
+
+  const onJoinFailed = useCallback((message: string) => {
+    const p = playAuthRef.current
+    if (!p?.registerUsername) return
+    setResumeReg({ sessionId: p.sessionId, message })
+    setRetryKey(k => k + 1)
+    setPlayAuth(null)
+  }, [])
+
+  if (!playAuth) {
+    return (
+      <LoginFlow
+        key={resumeReg ? `retry-${retryKey}` : 'login'}
+        onReady={s => {
+          setResumeReg(null)
+          setPlayAuth(s)
+        }}
+        resumeChooseName={resumeReg}
+      />
+    )
   }
 
   return (
     <GameCanvas
       config={{
         serverUrl:        getSocketServerUrl(),
-        sessionId:        auth.sessionId,
-        username:         auth.username,
-        registerUsername: auth.registerUsername,
+        sessionId:        playAuth.sessionId,
+        username:         playAuth.username,
+        registerUsername: playAuth.registerUsername,
         avatar:           'default',
         roomId:           'genesis-plaza',
+        onJoinFailed:     playAuth.registerUsername ? onJoinFailed : undefined,
       }}
     />
   )

@@ -155,8 +155,8 @@ export async function insertUserWithWallet(
 ): Promise<UserProfile> {
   const trimmed = displayName.trim()
   const norm = normalizeUsername(trimmed)
-  if (trimmed.length < 2 || trimmed.length > 20) {
-    throw new Error('Pseudo : 2 à 20 caractères')
+  if (trimmed.length < 5 || trimmed.length > 20) {
+    throw new Error('Pseudo : 5 à 20 caractères')
   }
   if (!/^[a-zA-Z0-9_\-]+$/.test(trimmed)) {
     throw new Error('Pseudo : lettres, chiffres, _ et - uniquement')

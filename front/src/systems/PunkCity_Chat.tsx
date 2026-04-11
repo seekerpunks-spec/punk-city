@@ -57,6 +57,8 @@ interface UseChatOptions {
   gridY?:           number
   // Callback direct (bypass React state) pour les updates de position à 60fps
   onPlayerMoved?: (data: { id: string; gridX: number; gridY: number; pixiX: number; pixiY: number; direction: string }) => void
+  /** Première inscription : erreur `player:join` (ex. pseudo déjà pris) → retour UI choix du pseudo */
+  onJoinError?: (message: string) => void
 }
 
 export interface ShopItem {
@@ -103,6 +105,9 @@ export function useChat(options: UseChatOptions) {
   // Ref stable vers le callback — se met à jour sans recréer la connexion socket
   const onPlayerMovedRef = useRef(options.onPlayerMoved)
   useEffect(() => { onPlayerMovedRef.current = options.onPlayerMoved }, [options.onPlayerMoved])
+
+  const onJoinErrorRef = useRef(options.onJoinError)
+  useEffect(() => { onJoinErrorRef.current = options.onJoinError }, [options.onJoinError])
 
   // ── Connexion ──────────────────────────
   useEffect(() => {
@@ -296,6 +301,10 @@ export function useChat(options: UseChatOptions) {
 
     socket.on('error', (err: { message: string }) => {
       console.error('[Punk City]', err.message)
+      if (options.registerUsername && onJoinErrorRef.current) {
+        onJoinErrorRef.current(err.message)
+        socket.disconnect()
+      }
     })
 
     return () => { socket.disconnect() }
