@@ -144,8 +144,13 @@ app.get('/health', (_, res) => res.json({ status: 'ok', players: players.size })
 
 if (fs.existsSync(path.join(frontDist, 'index.html'))) {
   app.use(express.static(frontDist))
-  app.get('*', (_req, res) => {
-    res.sendFile(path.join(frontDist, 'index.html'))
+  // Express 5 / path-to-regexp v8 : plus de app.get('*') — fallback SPA
+  app.use((req, res, next) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') return next()
+    if (req.path.startsWith('/socket.io')) return next()
+    res.sendFile(path.join(frontDist, 'index.html'), err => {
+      if (err) next(err)
+    })
   })
   console.log(`[http] Front statique → ${frontDist}`)
 }
