@@ -11,6 +11,7 @@
   "scripts": {
     "postinstall": "npm install --prefix front --include=dev && npm install --prefix back --include=dev",
     "build": "npm run build --prefix front",
+    "heroku-postbuild": "npm run build --prefix front",
     "start": "npm run start --prefix back",
     "dev": "concurrently \"npm run dev --prefix front\" \"npm run dev --prefix back\""
   }

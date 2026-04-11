@@ -34,6 +34,16 @@ fi
 echo ">>> Build local optionnel (vérifie que le front compile)"
 npm run build
 
+# Heroku ne déploie que le dernier commit : Procfile / package.json doivent être commités.
+for f in Procfile package.json; do
+  if [[ -f "$f" ]] && ! git diff --quiet HEAD -- "$f" 2>/dev/null; then
+    echo ""
+    echo "ERREUR: « $f » est modifié mais pas commité. Heroku ignorera ces changements."
+    echo "       git add $f && git commit -m 'Heroku: Procfile / scripts' && relance ./deploy.sh"
+    exit 1
+  fi
+done
+
 echo ">>> Push vers Heroku (branche ${BRANCH})"
 git push heroku "${BRANCH}:main"
 
