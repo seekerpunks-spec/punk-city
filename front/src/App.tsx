@@ -124,7 +124,7 @@ function LoginFlow({
             style={{
               width: '100%', background: 'rgba(180,33,243,0.2)', border: '1px solid #B421F3',
               borderRadius: 8, color: '#B421F3', padding: '10px', fontSize: 13,
-              cursor: 'pointer', fontFamily: 'monospace',
+              cursor: 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
             }}
           >
             Entrer dans la ville →
@@ -161,7 +161,7 @@ function LoginFlow({
           style={{
             width: '100%', background: 'rgba(180,33,243,0.2)', border: '1px solid #B421F3',
             borderRadius: 8, color: '#B421F3', padding: '12px', fontSize: 13,
-            cursor: loading ? 'wait' : 'pointer', fontFamily: 'monospace',
+            cursor: loading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
             opacity: loading ? 0.7 : 1,
             marginBottom: 10,
           }}
@@ -175,7 +175,7 @@ function LoginFlow({
           style={{
             width: '100%', background: 'rgba(20,241,149,0.12)', border: '1px solid #14f195',
             borderRadius: 8, color: '#14f195', padding: '12px', fontSize: 13,
-            cursor: loading ? 'wait' : 'pointer', fontFamily: 'monospace',
+            cursor: loading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
             opacity: loading ? 0.7 : 1,
           }}
         >

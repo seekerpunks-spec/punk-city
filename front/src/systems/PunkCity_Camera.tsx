@@ -332,7 +332,7 @@ export default function GameCanvas() {
         height: '100vh',
         overflow: 'hidden',
         background: '#0d0d1a',
-        cursor: 'crosshair',
+        cursor: 'var(--punk-cursor-default)',
       }}
     />
   )

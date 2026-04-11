@@ -716,7 +716,7 @@ export function Minimap({ activeRoomId, onRoomClick }: MinimapProps) {
                   : 'rgba(255,255,255,0.04)',
                 border:       `1px solid ${isActive ? '#B421F3' : 'rgba(97,0,151,0.3)'}`,
                 borderRadius: 6,
-                cursor:       'pointer',
+                cursor: 'var(--punk-cursor-pointer)',
                 display:      'flex',
                 flexDirection:'column',
                 alignItems:   'center',

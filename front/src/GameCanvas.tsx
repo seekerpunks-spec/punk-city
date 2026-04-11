@@ -221,7 +221,7 @@ function PrivateChatWindow({
         </div>
         <button onClick={onClose} style={{
           background: 'none', border: 'none', color: '#555',
-          cursor: 'pointer', fontSize: 13, padding: '0 2px',
+          cursor: 'var(--punk-cursor-pointer)', fontSize: 13, padding: '0 2px',
         }}>✕</button>
       </div>
 
@@ -298,7 +298,7 @@ function PrivateChatWindow({
           borderRadius: 6,
           color:        '#2986DF',
           padding:      '4px 10px',
-          cursor:       'pointer',
+          cursor: 'var(--punk-cursor-pointer)',
           fontSize:     11,
           fontFamily:   'monospace',
         }}>↵</button>
@@ -358,7 +358,7 @@ function PlayerPopup({
         </div>
         <button onClick={onClose} style={{
           background: 'none', border: 'none', color: '#555',
-          cursor: 'pointer', fontSize: 14, padding: '0 4px',
+          cursor: 'var(--punk-cursor-pointer)', fontSize: 14, padding: '0 4px',
         }}>✕</button>
       </div>
 
@@ -384,7 +384,7 @@ function PlayerPopup({
               color:        action.color,
               fontSize:     11,
               fontFamily:   'monospace',
-              cursor:       'pointer',
+              cursor: 'var(--punk-cursor-pointer)',
               textAlign:    'left',
               transition:   'background 0.15s',
             }}
@@ -413,7 +413,7 @@ function PlayerPopup({
             color:        isOwnerInApartment ? '#ffaa00' : '#555',
             fontSize:     11,
             fontFamily:   'monospace',
-            cursor:       'pointer',
+            cursor: 'var(--punk-cursor-pointer)',
             textAlign:    'left',
             transition:   'background 0.15s',
           }}
@@ -449,7 +449,7 @@ function ItemCard({ item, selected, onClick, dim, showPrice }: {
         border:       `1px solid ${selected ? '#B421F3' : 'rgba(255,255,255,0.1)'}`,
         borderRadius: 8,
         padding:      '8px 10px',
-        cursor:       onClick ? 'pointer' : 'default',
+        cursor:       onClick ? 'var(--punk-cursor-pointer)' : 'var(--punk-cursor-default)',
         opacity:      dim ? 0.45 : 1,
         display:      'flex', alignItems: 'center', gap: 8,
         userSelect:   'none',
@@ -533,7 +533,7 @@ function TradeWindow({
           <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
             🔄 TRADE — {trade.partnerUsername}
           </span>
-          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16 }}>✕</button>
+          <button onClick={onCancel} style={{ background: 'none', border: 'none', color: '#555', cursor: 'var(--punk-cursor-pointer)', fontSize: 16 }}>✕</button>
         </div>
 
         {/* Two columns */}
@@ -612,7 +612,7 @@ function TradeWindow({
               style={{
                 flex: 1, background: 'rgba(0,255,136,0.15)', border: '1px solid #00ff88',
                 borderRadius: 8, color: '#00ff88', fontSize: 11, fontFamily: 'monospace',
-                padding: '8px 0', cursor: 'pointer', fontWeight: 'bold',
+                padding: '8px 0', cursor: 'var(--punk-cursor-pointer)', fontWeight: 'bold',
               }}
             >✓ Lock Offer</button>
           )}
@@ -627,7 +627,7 @@ function TradeWindow({
               flex: trade.myConfirmed ? 1 : undefined, minWidth: 80,
               background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
               borderRadius: 8, color: '#ff4444', fontSize: 11, fontFamily: 'monospace',
-              padding: '8px 0', cursor: 'pointer',
+              padding: '8px 0', cursor: 'var(--punk-cursor-pointer)',
             }}
           >✕ Cancel</button>
         </div>
@@ -668,7 +668,7 @@ function InventoryPanel({ inventory, catalog, onClose }: {
           <span style={{ color: '#B421F3', fontWeight: 'bold', fontSize: 13, letterSpacing: 1 }}>
             🎒 INVENTORY
           </span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 16 }}>✕</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'var(--punk-cursor-pointer)', fontSize: 16 }}>✕</button>
         </div>
 
         <div style={{ padding: 16, overflowY: 'auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -749,7 +749,7 @@ function NeonMarketShop({
             </span>
             <button onClick={onClose} style={{
               background: 'none', border: 'none', color: '#555',
-              cursor: 'pointer', fontSize: 16, padding: '0 4px',
+              cursor: 'var(--punk-cursor-pointer)', fontSize: 16, padding: '0 4px',
             }}>✕</button>
           </div>
         </div>
@@ -790,7 +790,7 @@ function NeonMarketShop({
                         color:        canAfford ? '#B421F3' : '#444',
                         fontSize:     10, fontFamily: 'monospace',
                         padding:      '4px 10px',
-                        cursor:       canAfford ? 'pointer' : 'not-allowed',
+                        cursor:       canAfford ? 'var(--punk-cursor-pointer)' : 'not-allowed',
                       }}
                     >Buy</button>
                   )}
@@ -1088,7 +1088,7 @@ function InnerGame({
           // Curseur pointer au survol — le clic est géré par le listener de stage
           ;[walkGif, idleSw, spriteSe, spriteNw, spriteNe].forEach(s => {
             s.eventMode = 'static'
-            s.cursor    = 'pointer'
+            s.cursor    = 'var(--punk-cursor-pointer)'
           })
 
           // Position initiale depuis la dernière position connue du joueur
@@ -1414,7 +1414,7 @@ function InnerGame({
                 border: `1px solid ${mobilePanel === panel ? '#B421F3' : 'rgba(97,0,151,0.6)'}`,
                 borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: 22, cursor: 'pointer',
+                fontSize: 22, cursor: 'var(--punk-cursor-pointer)',
                 backdropFilter: 'blur(8px)',
                 boxShadow: mobilePanel === panel ? '0 0 20px rgba(180,33,243,0.5)' : '0 0 12px rgba(97,0,151,0.3)',
               }}>{i === 0 ? '💬' : '👥'}</div>
@@ -1438,7 +1438,7 @@ function InnerGame({
             position: 'fixed', bottom: 116, right: 16, zIndex: 2000,
             background: 'rgba(0,0,0,0.45)', border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: 4, color: showGrid ? '#B421F3' : '#666',
-            fontSize: 11, padding: '3px 8px', cursor: 'pointer', fontFamily: 'monospace',
+            fontSize: 11, padding: '3px 8px', cursor: 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
           }}>Grid</button>
           {showGrid && <canvas ref={gridCanvasRef} style={{
             position: 'fixed', inset: 0, pointerEvents: 'none', zIndex: 1,
@@ -1503,7 +1503,7 @@ function InnerGame({
               fontSize:     11,
               fontFamily:   'monospace',
               padding:      '5px 14px',
-              cursor:       'pointer',
+              cursor: 'var(--punk-cursor-pointer)',
               backdropFilter: 'blur(8px)',
             }}
           >← Leave Apartment</button>
@@ -1573,7 +1573,7 @@ function InnerGame({
                 style={{
                   flex: 1, background: 'rgba(255,170,0,0.15)', border: '1px solid #ffaa00',
                   borderRadius: 6, color: '#ffaa00', fontSize: 10, fontFamily: 'monospace',
-                  padding: '3px 0', cursor: 'pointer',
+                  padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
                 }}
               >✓ Accept</button>
               <button
@@ -1581,7 +1581,7 @@ function InnerGame({
                 style={{
                   flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
                   borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
-                  padding: '3px 0', cursor: 'pointer',
+                  padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
                 }}
               >✕ Decline</button>
             </div>
@@ -1608,12 +1608,12 @@ function InnerGame({
               <button onClick={() => acceptTrade(req.tradeId, req.fromId)} style={{
                 flex: 1, background: 'rgba(180,33,243,0.15)', border: '1px solid #B421F3',
                 borderRadius: 6, color: '#B421F3', fontSize: 10, fontFamily: 'monospace',
-                padding: '3px 0', cursor: 'pointer',
+                padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
               }}>✓ Accept</button>
               <button onClick={() => declineTrade(req.tradeId, req.fromId)} style={{
                 flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
                 borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
-                padding: '3px 0', cursor: 'pointer',
+                padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
               }}>✕ Decline</button>
             </div>
           </div>
@@ -1639,12 +1639,12 @@ function InnerGame({
               <button onClick={() => acceptFriendRequest(req.fromId)} style={{
                 flex: 1, background: 'rgba(0,255,136,0.15)', border: '1px solid #00ff88',
                 borderRadius: 6, color: '#00ff88', fontSize: 10, fontFamily: 'monospace',
-                padding: '3px 0', cursor: 'pointer',
+                padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
               }}>✓ Accept</button>
               <button onClick={() => declineFriendRequest(req.fromId)} style={{
                 flex: 1, background: 'rgba(255,68,68,0.1)', border: '1px solid #ff4444',
                 borderRadius: 6, color: '#ff4444', fontSize: 10, fontFamily: 'monospace',
-                padding: '3px 0', cursor: 'pointer',
+                padding: '3px 0', cursor: 'var(--punk-cursor-pointer)',
               }}>✕ Decline</button>
             </div>
           </div>
@@ -1665,7 +1665,7 @@ function InnerGame({
               padding:       '10px 14px',
               fontFamily:    'monospace',
               boxShadow:     '0 0 16px rgba(41,134,223,0.25)',
-              cursor:        'pointer',
+              cursor: 'var(--punk-cursor-pointer)',
               pointerEvents: 'all',
               animation:     'fadeIn 0.2s ease',
               minWidth:      220,
@@ -1910,7 +1910,7 @@ export default function GameCanvas({ config }: { config: GameConfig }) {
         style={{
           position: 'absolute', top: 0, left: 0,
           width: '100%', height: '100%',
-          cursor: 'pointer', zIndex: 0,
+          cursor: 'var(--punk-cursor-default)', zIndex: 0,
         }}
       />
       {!pixiReady && (
@@ -2027,7 +2027,7 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
               onClick={onOpenMarket}
               style={{
                 background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'pointer',
+                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
                 minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
                 fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2037,7 +2037,7 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
               onClick={onOpenInventory}
               style={{
                 background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'pointer',
+                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
                 minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
                 fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -2084,7 +2084,7 @@ function MobileBurgerMenu({ activeRoomId, onRoomClick }: { activeRoomId: string;
         position: 'fixed', top: 16, right: 16, width: 44, height: 44,
         background: 'rgba(10,10,20,0.9)', border: '1px solid rgba(97,0,151,0.5)',
         borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        fontSize: 20, cursor: 'pointer', zIndex: 500, backdropFilter: 'blur(8px)',
+        fontSize: 20, cursor: 'var(--punk-cursor-pointer)', zIndex: 500, backdropFilter: 'blur(8px)',
         boxShadow: '0 0 20px rgba(97,0,151,0.3)', color: '#B421F3',
       }}>☰</div>
       {open && (
@@ -2098,7 +2098,7 @@ function MobileBurgerMenu({ activeRoomId, onRoomClick }: { activeRoomId: string;
           </div>
           {ROOMS.map(room => (
             <div key={room.id} onClick={() => { onRoomClick(room.id); setOpen(false) }} style={{
-              width: 240, height: 64, cursor: 'pointer',
+              width: 240, height: 64, cursor: 'var(--punk-cursor-pointer)',
               background: activeRoomId === room.id ? 'rgba(180,33,243,0.2)' : 'rgba(255,255,255,0.04)',
               border: `1px solid ${activeRoomId === room.id ? '#B421F3' : 'rgba(97,0,151,0.3)'}`,
               borderRadius: 12, display: 'flex', alignItems: 'center', gap: 16, padding: '0 20px',
@@ -2112,7 +2112,7 @@ function MobileBurgerMenu({ activeRoomId, onRoomClick }: { activeRoomId: string;
           <div onClick={() => setOpen(false)} style={{
             marginTop: 24, width: 44, height: 44,
             background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(97,0,151,0.4)',
-            borderRadius: '50%', color: '#666', fontSize: 18, cursor: 'pointer',
+            borderRadius: '50%', color: '#666', fontSize: 18, cursor: 'var(--punk-cursor-pointer)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>✕</div>
         </div>

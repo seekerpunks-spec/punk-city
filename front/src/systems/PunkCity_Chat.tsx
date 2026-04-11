@@ -677,7 +677,7 @@ export function ChatPanel({ messages, myPlayerId, connected, onSend, onEmote, st
         <button onClick={handleSend} style={{
           background: 'rgba(180,33,243,0.2)', border: '1px solid #B421F3',
           borderRadius: 6, color: '#B421F3', padding: '4px 12px',
-          cursor: 'pointer', fontSize: 11, fontFamily: 'monospace',
+          cursor: 'var(--punk-cursor-pointer)', fontSize: 11, fontFamily: 'monospace',
         }}>↵</button>
       </div>
     </div>
@@ -742,7 +742,7 @@ export function SocialPanel({
     borderRadius: 6,
     color:        active ? '#B421F3' : '#555',
     padding:      '4px 2px',
-    cursor:       'pointer',
+    cursor: 'var(--punk-cursor-pointer)',
     fontSize:     10,
     fontFamily:   'monospace',
     lineHeight:   1.2,
@@ -848,7 +848,7 @@ export function SocialPanel({
                       padding: '5px 8px', borderRadius: 7,
                       background: 'rgba(255,255,255,0.03)',
                       border: '1px solid rgba(255,255,255,0.06)',
-                      cursor: 'pointer',
+                      cursor: 'var(--punk-cursor-pointer)',
                     }}>
                     <div style={{ position: 'relative', flexShrink: 0 }}>
                       <div style={{
@@ -883,7 +883,7 @@ export function SocialPanel({
                         style={{
                           background: 'rgba(41,134,223,0.15)', border: '1px solid rgba(41,134,223,0.4)',
                           borderRadius: 5, color: '#2986DF', fontSize: 9, padding: '3px 7px',
-                          cursor: 'pointer', fontFamily: 'monospace', flexShrink: 0,
+                          cursor: 'var(--punk-cursor-pointer)', fontFamily: 'monospace', flexShrink: 0,
                         }}
                       >PM</button>
                     )}
@@ -894,7 +894,7 @@ export function SocialPanel({
                         style={{
                           background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
                           borderRadius: 5, color: '#B421F3', fontSize: 9, padding: '3px 7px',
-                          cursor: 'pointer', fontFamily: 'monospace', flexShrink: 0,
+                          cursor: 'var(--punk-cursor-pointer)', fontFamily: 'monospace', flexShrink: 0,
                         }}
                       >🏠</button>
                     )}
@@ -917,7 +917,7 @@ export function SocialPanel({
                     onClick={() => onOpenPM({ id: peerId, username })}
                     style={{
                       display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '7px 8px', borderRadius: 7, cursor: 'pointer',
+                      padding: '7px 8px', borderRadius: 7, cursor: 'var(--punk-cursor-pointer)',
                       background: unread > 0 ? 'rgba(41,134,223,0.08)' : 'rgba(255,255,255,0.03)',
                       border: `1px solid ${unread > 0 ? 'rgba(41,134,223,0.3)' : 'rgba(255,255,255,0.06)'}`,
                       transition: 'background 0.15s',
@@ -971,7 +971,7 @@ export function SocialPanel({
               fontSize:     11,
               fontFamily:   'monospace',
               padding:      '5px 0',
-              cursor:       'pointer',
+              cursor: 'var(--punk-cursor-pointer)',
               letterSpacing: 1,
             }}
           >
