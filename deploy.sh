@@ -6,7 +6,12 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")" && pwd)"
 cd "$ROOT"
 
+# Nom d'app : variable d'environnement HEROKU_APP, sinon premier argument (ex. ./deploy.sh alpha-punk-city)
 HEROKU_APP="${HEROKU_APP:-}"
+if [[ -z "$HEROKU_APP" && -n "${1:-}" ]]; then
+  HEROKU_APP="$1"
+fi
+
 # Par défaut : branche courante → heroku/main (évite de pousser un vieux main local)
 BRANCH="${BRANCH:-$(git rev-parse --abbrev-ref HEAD)}"
 
@@ -19,17 +24,19 @@ fi
 # heroku login
 # heroku create "${HEROKU_APP}" --region eu
 # heroku addons:create heroku-postgresql:essential-0 -a "${HEROKU_APP}"
-# heroku git:remote -a "${HEROKU_APP}" -r heroku
 # heroku config:set NODE_ENV=production -a "${HEROKU_APP}"
 
-if [[ -z "$HEROKU_APP" ]]; then
-  if git remote get-url heroku &>/dev/null; then
-    echo "Remote git « heroku » détecté — push sans option HEROKU_APP."
-  else
-    echo "Définis le nom de l’app :  HEROKU_APP=ma-punk-city  $0"
-    echo "Ou ajoute le remote :  heroku git:remote -a ma-punk-city"
-    exit 1
-  fi
+if [[ -n "$HEROKU_APP" ]]; then
+  echo ">>> App Heroku : ${HEROKU_APP}"
+  heroku git:remote -a "$HEROKU_APP" -r heroku
+elif git remote get-url heroku &>/dev/null; then
+  echo "Remote git « heroku » détecté (URL actuelle). Pour cibler une app :  $0 alpha-punk-city  ou  HEROKU_APP=alpha-punk-city $0"
+else
+  echo "Indique le nom de l’app Heroku, par exemple :"
+  echo "  $0 alpha-punk-city"
+  echo "Ou :  export HEROKU_APP=alpha-punk-city && $0"
+  echo "Ou :  heroku git:remote -a alpha-punk-city"
+  exit 1
 fi
 
 echo ">>> Build local optionnel (vérifie que le front compile)"
@@ -48,7 +55,7 @@ done
 echo ">>> Push vers Heroku (branche ${BRANCH})"
 git push heroku "${BRANCH}:main"
 
-if [[ -n "$HEROKU_APP" ]]; then
+if [[ -n "${HEROKU_APP:-}" ]]; then
   echo ">>> Ouverture du site"
   heroku open -a "$HEROKU_APP"
 else
