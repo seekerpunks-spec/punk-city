@@ -35,6 +35,33 @@ textarea {
   cursor: inherit;
 }
 
+/* Modal wallet Solana — fond sombre, accents néon */
+.wallet-adapter-modal-wrapper {
+  background: rgba(5, 5, 12, 0.92) !important;
+  backdrop-filter: blur(8px);
+}
+.wallet-adapter-modal {
+  background: rgba(15, 15, 28, 0.98) !important;
+  border: 1px solid rgba(180, 33, 243, 0.45) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 0 48px rgba(180, 33, 243, 0.2) !important;
+}
+.wallet-adapter-modal-title {
+  color: #B421F3 !important;
+  font-family: monospace !important;
+  letter-spacing: 0.15em !important;
+}
+.wallet-adapter-button {
+  background: rgba(20, 241, 149, 0.08) !important;
+  border: 1px solid rgba(20, 241, 149, 0.35) !important;
+  border-radius: 10px !important;
+  color: #a0f5d0 !important;
+  font-family: monospace !important;
+}
+.wallet-adapter-button:hover {
+  background: rgba(20, 241, 149, 0.18) !important;
+}
+
 h1,
 h2 {
   font-family: var(--heading);

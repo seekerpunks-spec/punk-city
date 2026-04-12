@@ -23,14 +23,10 @@ import {
   updateUserAvatarOnly,
 } from './db.js'
 import {
-  isEvmAddress,
-  ethereumStorageKey,
   isSolanaAddress,
   normalizeSolanaAddress,
   solanaStorageKey,
-  buildLoginMessageEthereum,
   buildLoginMessageSolana,
-  verifyWalletSignature,
   verifySolanaSignature,
 } from './walletAuth.js'
 
@@ -162,79 +158,34 @@ app.get('/health', (_, res) => res.json({ status: 'ok', players: players.size })
 // ── Auth wallet (avant connexion socket) ─────────────────────────────────
 app.get('/api/auth/nonce', (req, res) => {
   const address = String(req.query.address ?? '')
-  const chain = String(req.query.chain ?? 'ethereum').toLowerCase()
+  if (!isSolanaAddress(address)) {
+    return res.status(400).json({ error: 'Adresse Solana invalide' })
+  }
   const nonce = randomBytes(16).toString('hex')
   const exp = Date.now() + 10 * 60 * 1000
-
-  if (chain === 'solana' || chain === 'sol') {
-    if (!isSolanaAddress(address)) {
-      return res.status(400).json({ error: 'Adresse Solana invalide' })
-    }
-    const key = solanaStorageKey(address)
-    authNonces.set(key, { nonce, exp })
-    return res.json({ nonce })
-  }
-
-  if (!isEvmAddress(address)) {
-    return res.status(400).json({ error: 'Adresse Ethereum invalide' })
-  }
-  const key = ethereumStorageKey(address)
+  const key = solanaStorageKey(address)
   authNonces.set(key, { nonce, exp })
   res.json({ nonce })
 })
 
 app.post('/api/auth/verify', async (req, res) => {
   try {
-    const { address, signature, message, chain } = req.body ?? {}
-    const c = String(chain ?? 'ethereum').toLowerCase()
-
-    if (c === 'solana' || c === 'sol') {
-      const addr = String(address ?? '')
-      if (!isSolanaAddress(addr)) {
-        return res.status(400).json({ error: 'Adresse Solana invalide' })
-      }
-      const walletKey = solanaStorageKey(addr)
-      const entry = authNonces.get(walletKey)
-      if (!entry || entry.exp < Date.now()) {
-        return res.status(401).json({ error: 'Nonce expiré — redemande un nonce' })
-      }
-      const canonical = normalizeSolanaAddress(addr)
-      const expected = buildLoginMessageSolana(canonical, entry.nonce)
-      if (String(message) !== expected) {
-        return res.status(400).json({ error: 'Message de signature incorrect' })
-      }
-      if (!verifySolanaSignature(canonical, String(message), String(signature))) {
-        return res.status(401).json({ error: 'Signature invalide' })
-      }
-      authNonces.delete(walletKey)
-
-      const existing = await findUserByWallet(walletKey)
-      const sessionId = randomBytes(32).toString('hex')
-      authSessions.set(sessionId, { wallet: walletKey, exp: Date.now() + 24 * 60 * 60 * 1000 })
-
-      if (existing) {
-        return res.json({
-          sessionId,
-          registered: true,
-          username:   existing.displayName,
-        })
-      }
-      return res.json({ sessionId, registered: false })
+    const { address, signature, message } = req.body ?? {}
+    const addr = String(address ?? '')
+    if (!isSolanaAddress(addr)) {
+      return res.status(400).json({ error: 'Adresse Solana invalide' })
     }
-
-    if (!isEvmAddress(String(address))) {
-      return res.status(400).json({ error: 'Adresse Ethereum invalide' })
-    }
-    const walletKey = ethereumStorageKey(String(address))
+    const walletKey = solanaStorageKey(addr)
     const entry = authNonces.get(walletKey)
     if (!entry || entry.exp < Date.now()) {
       return res.status(401).json({ error: 'Nonce expiré — redemande un nonce' })
     }
-    const expected = buildLoginMessageEthereum(String(address), entry.nonce)
+    const canonical = normalizeSolanaAddress(addr)
+    const expected = buildLoginMessageSolana(canonical, entry.nonce)
     if (String(message) !== expected) {
       return res.status(400).json({ error: 'Message de signature incorrect' })
     }
-    if (!verifyWalletSignature(String(address), String(message), String(signature))) {
+    if (!verifySolanaSignature(canonical, String(message), String(signature))) {
       return res.status(401).json({ error: 'Signature invalide' })
     }
     authNonces.delete(walletKey)

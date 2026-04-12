@@ -1,12 +1,14 @@
 /**
  * PUNK CITY — App.tsx
- * Auth wallet Ethereum ou Solana (Solflare / Phantom) + pseudo figé à la première connexion
+ * Connexion uniquement via wallets Solana (liste complète dans la modal) + pseudo figé à la première visite
  */
 
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useWalletModal } from '@solana/wallet-adapter-react-ui'
 import GameCanvas from './GameCanvas'
 import { getSocketServerUrl } from './serverUrl'
-import { connectWalletAndVerifySession, type WalletChain } from './walletAuth'
+import { verifySolanaSession } from './walletAuth'
 
 type AuthState =
   | { step: 'login' }
@@ -30,17 +32,34 @@ function LoginFlow({
   const [loading, setLoading] = useState(false)
   const api = getSocketServerUrl()
 
+  const { publicKey, signMessage, connected, connecting, disconnect } = useWallet()
+  const { setVisible } = useWalletModal()
+
   useEffect(() => {
     if (!resumeChooseName) return
     setAuth({ step: 'choose_name', sessionId: resumeChooseName.sessionId })
     setErr(resumeChooseName.message)
   }, [resumeChooseName])
 
-  const handleConnect = async (chain: WalletChain) => {
+  const runVerify = async () => {
+    if (!publicKey || !signMessage) {
+      throw new Error('Connecte un wallet Solana qui autorise la signature de messages.')
+    }
+    return verifySolanaSession(api, signMessage, publicKey)
+  }
+
+  /** Étape 1 : ouvrir la modal pour choisir Phantom, Solflare, Seeker Phone, etc. */
+  const openWalletModal = () => {
+    setErr(null)
+    setVisible(true)
+  }
+
+  /** Étape 2 : une fois le wallet connecté, signer et obtenir la session */
+  const handleSignAndContinue = async () => {
     setErr(null)
     setLoading(true)
     try {
-      const r = await connectWalletAndVerifySession(api, { chain })
+      const r = await runVerify()
       if (r.registered && r.username) {
         onReady({ step: 'play', sessionId: r.sessionId, username: r.username })
         return
@@ -154,36 +173,63 @@ function LoginFlow({
         <div style={{ color: '#666', fontSize: 11, marginBottom: 32, letterSpacing: 2 }}>
           BY SEEKERPUNKS
         </div>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => void handleConnect('ethereum')}
-          style={{
-            width: '100%', background: 'rgba(180,33,243,0.2)', border: '1px solid #B421F3',
-            borderRadius: 8, color: '#B421F3', padding: '12px', fontSize: 13,
-            cursor: loading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
-            opacity: loading ? 0.7 : 1,
-            marginBottom: 10,
-          }}
-        >
-          {loading ? 'Connexion…' : 'Ethereum (MetaMask, Rabby…)' }
-        </button>
-        <button
-          type="button"
-          disabled={loading}
-          onClick={() => void handleConnect('solana')}
-          style={{
-            width: '100%', background: 'rgba(20,241,149,0.12)', border: '1px solid #14f195',
-            borderRadius: 8, color: '#14f195', padding: '12px', fontSize: 13,
-            cursor: loading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
-            opacity: loading ? 0.7 : 1,
-          }}
-        >
-          {loading ? 'Connexion…' : 'Solana (Solflare)'}
-        </button>
+
+        {!connected ? (
+          <button
+            type="button"
+            disabled={connecting}
+            onClick={openWalletModal}
+            style={{
+              width: '100%', background: 'rgba(20,241,149,0.12)', border: '1px solid #14f195',
+              borderRadius: 8, color: '#14f195', padding: '12px', fontSize: 13,
+              cursor: connecting ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
+              opacity: connecting ? 0.7 : 1,
+              marginBottom: 12,
+            }}
+          >
+            {connecting ? 'Connexion au wallet…' : 'Choisir un wallet Solana'}
+          </button>
+        ) : (
+          <>
+            <div style={{ color: '#888', fontSize: 10, marginBottom: 10, wordBreak: 'break-all' }}>
+              {publicKey?.toBase58().slice(0, 8)}…{publicKey?.toBase58().slice(-6)}
+            </div>
+            <button
+              type="button"
+              disabled={loading || !signMessage}
+              onClick={() => void handleSignAndContinue()}
+              style={{
+                width: '100%', background: 'rgba(20,241,149,0.12)', border: '1px solid #14f195',
+                borderRadius: 8, color: '#14f195', padding: '12px', fontSize: 13,
+                cursor: loading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
+                opacity: loading || !signMessage ? 0.7 : 1,
+                marginBottom: 8,
+              }}
+            >
+              {loading ? 'Signature…' : 'Signer et entrer dans la ville'}
+            </button>
+            {!signMessage && (
+              <div style={{ color: '#f66', fontSize: 10, marginBottom: 8 }}>
+                Ce wallet n’expose pas la signature de message — essaie Phantom ou Solflare.
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => void disconnect()}
+              style={{
+                width: '100%', background: 'transparent', border: '1px solid #444',
+                borderRadius: 8, color: '#666', padding: '8px', fontSize: 11,
+                cursor: 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
+              }}
+            >
+              Changer de wallet
+            </button>
+          </>
+        )}
+
         {err && <div style={{ color: '#f66', fontSize: 11, marginTop: 16 }}>{err}</div>}
-        <div style={{ color: '#333', fontSize: 10, marginTop: 20 }}>
-          Ton pseudo est lié une seule fois au wallet choisi (chaîne distincte).
+        <div style={{ color: '#333', fontSize: 10, marginTop: 20, lineHeight: 1.5 }}>
+          Phantom, Solflare, Seeker Phone, Ledger, etc. — ton pseudo est lié une seule fois à ton adresse Solana.
         </div>
       </div>
     </div>
@@ -202,7 +248,6 @@ export default function App() {
     const p = playAuthRef.current
     if (!p?.registerUsername) return
     const sessionId = p.sessionId
-    /* Deux rAF : laisse le ticker Pixi / React finir la frame avant démontage (évite .remove sur null) */
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         setResumeReg({ sessionId, message })
