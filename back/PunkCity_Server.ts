@@ -94,7 +94,28 @@ const inventories           = new Map<string, string[]>()     // socketId → it
 const usernameToSocketId    = new Map<string, string>()
 
 const authNonces   = new Map<string, { nonce: string; exp: number }>()
-const authSessions = new Map<string, { wallet: string; exp: number }>()
+type AuthSession =
+  | { kind: 'wallet'; wallet: string; exp: number }
+  | { kind: 'guest'; guestUsername: string; guestFeatureAccess: boolean; exp: number }
+const authSessions = new Map<string, AuthSession>()
+
+/** Invités « restreints » : chat + déplacement uniquement (pas trade, shop, amis, PM, apparts) */
+const guestSocketLimited = new Map<string, boolean>()
+let guestSerial = 0
+
+function envBoolPrimary(name: string, alt?: string): boolean {
+  const v = process.env[name] ?? (alt ? process.env[alt] : undefined)
+  if (v == null || v === '') return false
+  const s = String(v).trim().toLowerCase()
+  return s === 'true' || s === '1' || s === 'yes'
+}
+
+/** Si true : invités avec trade, amis (session), shop, etc. Sinon : invités limités au chat + exploration. */
+const GUEST_FEATURE_ACCESS = envBoolPrimary('GUEST_FEATURE_ACCESS', 'guest_feature_access')
+
+function isGuestNorm(normalizedUsername: string): boolean {
+  return /^guest_\d+$/.test(normalizedUsername)
+}
 
 const rooms = new Map<string, Room>([
   ['genesis-plaza',    { id: 'genesis-plaza',    name: 'Genesis Plaza',    players: new Map(), history: [] }],
@@ -192,7 +213,11 @@ app.post('/api/auth/verify', async (req, res) => {
 
     const existing = await findUserByWallet(walletKey)
     const sessionId = randomBytes(32).toString('hex')
-    authSessions.set(sessionId, { wallet: walletKey, exp: Date.now() + 24 * 60 * 60 * 1000 })
+    authSessions.set(sessionId, {
+      kind:   'wallet',
+      wallet: walletKey,
+      exp:    Date.now() + 24 * 60 * 60 * 1000,
+    })
 
     if (existing) {
       return res.json({
@@ -206,6 +231,21 @@ app.post('/api/auth/verify', async (req, res) => {
     console.error('[auth/verify]', e)
     return res.status(500).json({ error: 'Erreur serveur' })
   }
+})
+
+/** Session invité sans wallet — pseudo auto `guest_<n>`, droits selon GUEST_FEATURE_ACCESS / guest_feature_access */
+app.post('/api/guest/session', (_req, res) => {
+  guestSerial += 1
+  const username = `guest_${guestSerial}`
+  const sessionId = randomBytes(32).toString('hex')
+  const guestFeatureAccess = GUEST_FEATURE_ACCESS
+  authSessions.set(sessionId, {
+    kind:                 'guest',
+    guestUsername:        username,
+    guestFeatureAccess,
+    exp:                  Date.now() + 24 * 60 * 60 * 1000,
+  })
+  res.json({ sessionId, username, guestFeatureAccess })
 })
 
 if (fs.existsSync(path.join(frontDist, 'index.html'))) {
@@ -242,9 +282,69 @@ io.on('connection', (socket: Socket) => {
       if (!sess || sess.exp < Date.now()) {
         return socket.emit('error', { message: 'Session expirée — reconnecte ton wallet (étape auth)' })
       }
-      const wallet = sess.wallet
-      sess.exp     = Date.now() + 24 * 60 * 60 * 1000
+      sess.exp = Date.now() + 24 * 60 * 60 * 1000
 
+      if (sess.kind === 'guest') {
+        const guestLimited = !sess.guestFeatureAccess
+        guestSocketLimited.set(socket.id, guestLimited)
+
+        const displayUsername = sess.guestUsername
+        const norm            = normalizeUsername(displayUsername)
+        const player: Player = {
+          id:        socket.id,
+          username:  displayUsername,
+          avatar:    data.avatar || 'default',
+          roomId,
+          gridX:     data.gridX    ?? 5,
+          gridY:     data.gridY    ?? 5,
+          direction: data.direction || 'sw',
+        }
+
+        players.set(socket.id, player)
+        room.players.set(socket.id, player)
+        socket.join(roomId)
+        usernameToSocketId.set(norm, socket.id)
+
+        wallets.set(socket.id, guestLimited ? 0 : 500)
+        inventories.set(socket.id, [])
+
+        if (!guestLimited) {
+          const aptRoomId = `apartment_${player.username}`
+          if (!rooms.has(aptRoomId)) {
+            rooms.set(aptRoomId, {
+              id:      aptRoomId,
+              name:    `${player.username}'s Apartment`,
+              players: new Map(),
+              history: [],
+            })
+          }
+        }
+
+        socket.emit('player:joined', {
+          player,
+          players:      getPlayersInRoom(roomId),
+          history:      room.history,
+          neonCredits:  wallets.get(socket.id)!,
+          inventory:    inventories.get(socket.id)!,
+          shopCatalog:  guestLimited ? [] : SHOP_CATALOG,
+          friends:      [],
+          guestLimited,
+        })
+
+        socket.to(roomId).emit('player:entered', player)
+
+        const sysMsg: ChatMessage = {
+          id: generateId(), playerId: 'system', username: 'Punk City', avatar: 'system',
+          text: `${player.username} joined ${room.name}`,
+          roomId, timestamp: Date.now(), type: 'system',
+        }
+        addToHistory(room, sysMsg)
+        io.to(roomId).emit('chat:message', sysMsg)
+        console.log(`[room:${roomId}] ${player.username} joined (guest${guestLimited ? ', limited' : ''}) (${room.players.size} players)`)
+        return
+      }
+
+      const wallet = sess.wallet
       let profile = await findUserByWallet(wallet)
       if (!profile) {
         const raw = data.registerUsername?.trim()
@@ -327,6 +427,7 @@ io.on('connection', (socket: Socket) => {
         inventory:    inventories.get(socket.id)!,
         shopCatalog:  SHOP_CATALOG,
         friends:        friendsPayload,
+        guestLimited:   false,
       })
 
       socket.to(roomId).emit('player:entered', player)
@@ -362,6 +463,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('pm:send', (data: { targetId: string; text: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const sender = players.get(socket.id)
     if (!sender) return
     const text = data.text?.trim().slice(0, 200)
@@ -409,6 +511,9 @@ io.on('connection', (socket: Socket) => {
   socket.on('player:changeRoom', (data: { roomId: string }) => {
     const player  = players.get(socket.id)
     if (!player) return
+    if (guestSocketLimited.get(socket.id) && data.roomId.startsWith('apartment_')) {
+      return socket.emit('error', { message: 'Mode invité limité : pas d’appartements.' })
+    }
     const oldRoom = rooms.get(player.roomId)
     let   newRoom = rooms.get(data.roomId)
     if (!newRoom) {
@@ -460,6 +565,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('friend:request', (data: { targetId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     console.log(`[friend:request] from=${socket.id} to=${data.targetId} knownPlayers=${[...players.keys()].join(',')}`)
     const sender = players.get(socket.id)
     const target = players.get(data.targetId)
@@ -479,6 +585,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('friend:accept', async (data: { requesterId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const accepter  = players.get(socket.id)
     const requester = players.get(data.requesterId)
     if (!accepter || !requester) return
@@ -493,7 +600,11 @@ io.on('connection', (socket: Socket) => {
     friendships.get(data.requesterId)!.add(socket.id)
 
     try {
-      await addFriendship(requester.username, accepter.username)
+      const na = normalizeUsername(requester.username)
+      const nb = normalizeUsername(accepter.username)
+      if (!isGuestNorm(na) && !isGuestNorm(nb)) {
+        await addFriendship(requester.username, accepter.username)
+      }
     } catch (e) {
       console.error('[friend:accept]', e)
     }
@@ -514,6 +625,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('friend:decline', (data: { requesterId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const pending = pendingFriendRequests.get(socket.id)
     if (pending) pending.delete(data.requesterId)
 
@@ -526,6 +638,7 @@ io.on('connection', (socket: Socket) => {
   // ── Trade ────────────────────────────────
   // ── Invitation Appartement ───────────────
   socket.on('apartment:invite', () => {
+    if (guestSocketLimited.get(socket.id)) return
     const player = players.get(socket.id)
     if (!player) return
     if (player.roomId !== `apartment_${player.username}`) return
@@ -542,6 +655,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('apartment:invite-one', (data: { targetId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const player = players.get(socket.id)
     if (!player) return
     if (player.roomId !== `apartment_${player.username}`) return
@@ -557,6 +671,7 @@ io.on('connection', (socket: Socket) => {
 
   // ── Trade ────────────────────────────────
   socket.on('trade:request', (data: { targetId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const sender = players.get(socket.id)
     const target = players.get(data.targetId)
     if (!sender || !target || socket.id === data.targetId) return
@@ -569,6 +684,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('trade:accept', (data: { tradeId: string; requesterId: string }) => {
+    if (guestSocketLimited.get(socket.id) || guestSocketLimited.get(data.requesterId)) return
     const accepter  = players.get(socket.id)
     const requester = players.get(data.requesterId)
     if (!accepter || !requester) return
@@ -585,11 +701,13 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('trade:decline', (data: { tradeId: string; requesterId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const decliner = players.get(socket.id)
     io.to(data.requesterId).emit('trade:declined', { tradeId: data.tradeId, byUsername: decliner?.username ?? '???' })
   })
 
   socket.on('trade:update_offer', (data: { tradeId: string; offer: string[]; credits: number }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     const isA = trade.playerAId === socket.id
@@ -605,6 +723,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('trade:confirm', async (data: { tradeId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     const isA = trade.playerAId === socket.id
@@ -662,8 +781,12 @@ io.on('connection', (socket: Socket) => {
       const pa = players.get(trade.playerAId)
       const pb = players.get(trade.playerBId)
       try {
-        if (pa) await saveUserProgress(normalizeUsername(pa.username), newWalA, newInvA)
-        if (pb) await saveUserProgress(normalizeUsername(pb.username), newWalB, newInvB)
+        if (pa && !isGuestNorm(normalizeUsername(pa.username))) {
+          await saveUserProgress(normalizeUsername(pa.username), newWalA, newInvA)
+        }
+        if (pb && !isGuestNorm(normalizeUsername(pb.username))) {
+          await saveUserProgress(normalizeUsername(pb.username), newWalB, newInvB)
+        }
       } catch (e) {
         console.error('[trade:confirm] save', e)
       }
@@ -692,6 +815,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('trade:cancel', (data: { tradeId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const trade = activeTrades.get(data.tradeId)
     if (!trade) return
     if (trade.playerAId !== socket.id && trade.playerBId !== socket.id) return
@@ -703,6 +827,13 @@ io.on('connection', (socket: Socket) => {
 
   // ── Shop ─────────────────────────────────
   socket.on('get_shop', () => {
+    if (guestSocketLimited.get(socket.id)) {
+      return socket.emit('shop_data', {
+        items:       [],
+        neonCredits: 0,
+        inventory:   inventories.get(socket.id) ?? [],
+      })
+    }
     socket.emit('shop_data', {
       items:       SHOP_CATALOG,
       neonCredits: wallets.get(socket.id) ?? 0,
@@ -711,6 +842,7 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('buy_item', async (data: { itemId: string }) => {
+    if (guestSocketLimited.get(socket.id)) return
     const item = SHOP_CATALOG.find(i => i.id === data.itemId)
     if (!item) return
     const credits   = wallets.get(socket.id) ?? 0
@@ -720,7 +852,7 @@ io.on('connection', (socket: Socket) => {
     wallets.set(socket.id, credits - item.price)
     inventories.set(socket.id, [...inventory, item.id])
     const p = players.get(socket.id)
-    if (p) {
+    if (p && !isGuestNorm(normalizeUsername(p.username))) {
       try {
         await saveUserProgress(
           normalizeUsername(p.username),
@@ -743,14 +875,18 @@ io.on('connection', (socket: Socket) => {
     const player = players.get(socket.id)
     if (!player) return
 
-    try {
-      await saveUserProgress(
-        normalizeUsername(player.username),
-        wallets.get(socket.id) ?? 0,
-        inventories.get(socket.id) ?? [],
-      )
-    } catch (e) {
-      console.error('[disconnect] save', e)
+    guestSocketLimited.delete(socket.id)
+
+    if (!isGuestNorm(normalizeUsername(player.username))) {
+      try {
+        await saveUserProgress(
+          normalizeUsername(player.username),
+          wallets.get(socket.id) ?? 0,
+          inventories.get(socket.id) ?? [],
+        )
+      } catch (e) {
+        console.error('[disconnect] save', e)
+      }
     }
     usernameToSocketId.delete(normalizeUsername(player.username))
 

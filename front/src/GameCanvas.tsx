@@ -30,6 +30,8 @@ interface GameConfig {
   roomId:              string
   /** Si `registerUsername` : échec d’inscription (ex. pseudo pris) → retour choix du pseudo */
   onJoinFailed?: (message: string) => void
+  /** Invité restreint : pas de trade, shop, amis, PM, apparts (contrôle serveur + UI) */
+  guestLimited?:     boolean
 }
 
 // ─────────────────────────────────────────
@@ -315,6 +317,7 @@ function PlayerPopup({
   onTrade,
   onVisitApartment,
   isOwnerInApartment,
+  guestLimited,
 }: {
   player: { id: string; username: string }
   onClose: () => void
@@ -323,8 +326,39 @@ function PlayerPopup({
   onTrade: (id: string) => void
   onVisitApartment: (username: string) => void
   isOwnerInApartment: boolean
+  guestLimited?: boolean
 }) {
   const [showAptMsg, setShowAptMsg] = useState(false)
+  if (guestLimited) {
+    return (
+      <div style={{
+        position:     'fixed',
+        bottom:       16,
+        right:        292,
+        background:   'rgba(10,10,20,0.95)',
+        border:       '1px solid rgba(180,33,243,0.5)',
+        borderRadius: 12,
+        padding:      '14px 18px',
+        fontFamily:   'monospace',
+        zIndex:       2000,
+        backdropFilter: 'blur(12px)',
+        boxShadow:    '0 0 24px rgba(180,33,243,0.2)',
+        minWidth:     180,
+        animation:    'fadeIn 0.2s ease',
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <div style={{ color: '#ffffff', fontWeight: 'bold', fontSize: 12 }}>{player.username}</div>
+          <button type="button" onClick={onClose} style={{
+            background: 'none', border: 'none', color: '#555',
+            cursor: 'var(--punk-cursor-pointer)', fontSize: 14, padding: '0 4px',
+          }}>✕</button>
+        </div>
+        <div style={{ color: '#888', fontSize: 10, lineHeight: 1.4 }}>
+          Mode invité : chat et exploration uniquement.
+        </div>
+      </div>
+    )
+  }
   return (
     <div style={{
       position:     'fixed',
@@ -841,6 +875,7 @@ function InnerGame({
     registerUsername: config.registerUsername,
     avatar:           config.avatar,
     roomId:           config.roomId,
+    guestLimited:     config.guestLimited === true,
     // Bypass React state pour les updates de position à 60fps → plus de téléportation
     onPlayerMoved: useCallback((data: any) => { onPlayerMovedCbRef.current(data) }, []),
     onJoinError:      config.onJoinFailed,
@@ -903,6 +938,11 @@ function InnerGame({
 
   const { activeRoomId, activeRoom, transitioning, blockedTiles, loadRoom, checkDoors } =
     useRoomSystem(app, world, onRoomChange)
+
+  const safeLoadRoom = useCallback((roomId: string, spawnX?: number, spawnY?: number) => {
+    if (config.guestLimited && roomId.startsWith('apartment_')) return
+    void loadRoom(roomId, spawnX, spawnY)
+  }, [config.guestLimited, loadRoom])
 
   // Affiche les bâtiments/bg uniquement dans Genesis Plaza
   useEffect(() => {
@@ -1359,8 +1399,8 @@ function InnerGame({
     <>
       {/* Minimap desktop / Burger mobile */}
       {isLandscapeMobile
-        ? <MobileBurgerMenu activeRoomId={activeRoomId} onRoomClick={loadRoom} />
-        : <Minimap activeRoomId={activeRoomId} onRoomClick={loadRoom} />
+        ? <MobileBurgerMenu activeRoomId={activeRoomId} onRoomClick={safeLoadRoom} />
+        : <Minimap activeRoomId={activeRoomId} onRoomClick={safeLoadRoom} />
       }
       <RoomInfo room={activeRoom} />
 
@@ -1394,10 +1434,11 @@ function InnerGame({
               pmConversations={pmConversations}
               unreadPMs={unreadPMs}
               onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
-              onMyApartment={() => loadRoom(`apartment_${config.username}`)}
+              onMyApartment={() => safeLoadRoom(`apartment_${config.username}`)}
               onSelectPlayer={p => setSelectedPlayer(p)}
               inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
               onInviteToApartment={sendApartmentInviteToOne}
+              guestLimited={config.guestLimited === true}
               compact
               style={{ bottom: 80, left: 8, right: 8, width: 'auto', zIndex: 1999 }}
             />
@@ -1457,10 +1498,11 @@ function InnerGame({
             pmConversations={pmConversations}
             unreadPMs={unreadPMs}
             onOpenPM={p => { setPmTarget(p); markPMsRead(p.id) }}
-            onMyApartment={() => loadRoom(`apartment_${config.username}`)}
+            onMyApartment={() => safeLoadRoom(`apartment_${config.username}`)}
             onSelectPlayer={p => setSelectedPlayer(p)}
             inMyApartment={activeRoomId === `apartment_${config.username}` && myPlayer?.roomId === `apartment_${config.username}`}
             onInviteToApartment={sendApartmentInviteToOne}
+            guestLimited={config.guestLimited === true}
           />
         </>
       )}
@@ -1494,7 +1536,7 @@ function InnerGame({
           zIndex:    500,
         }}>
           <button
-            onClick={() => loadRoom('genesis-plaza', 1, 12)}
+            onClick={() => safeLoadRoom('genesis-plaza', 1, 12)}
             style={{
               background:   'rgba(10,10,20,0.9)',
               border:       '1px solid rgba(180,33,243,0.5)',
@@ -1519,17 +1561,18 @@ function InnerGame({
           onAddFriend={sendFriendRequest}
           onPrivateMessage={p => { setPmTarget(p); setSelectedPlayer(null) }}
           onTrade={id => { sendTradeRequest(id); setSelectedPlayer(null) }}
-          onVisitApartment={username => { loadRoom(`apartment_${username}`); setSelectedPlayer(null) }}
+          onVisitApartment={username => { safeLoadRoom(`apartment_${username}`); setSelectedPlayer(null) }}
           isOwnerInApartment={
             // Cherche d'abord dans players (même room), puis dans friends (rooms différentes)
             (players.find(p => p.id === selectedPlayer.id)?.roomId ??
              friends.find(f => f.id === selectedPlayer.id)?.roomId) === `apartment_${selectedPlayer.username}`
           }
+          guestLimited={config.guestLimited === true}
         />
       )}
 
       {/* Fenêtre PM — à gauche du panneau social */}
-      {pmTarget && (
+      {pmTarget && !config.guestLimited && (
         <PrivateChatWindow
           target={pmTarget}
           messages={pmConversations.get(pmTarget.id) ?? []}
@@ -1552,7 +1595,7 @@ function InnerGame({
         pointerEvents: 'none',
       }}>
         {/* Invitations appartement */}
-        {apartmentInvites.map(inv => (
+        {!config.guestLimited && apartmentInvites.map(inv => (
           <div key={inv.fromId} style={{
             background:    'rgba(10,10,20,0.95)',
             border:        '1px solid rgba(255,170,0,0.6)',
@@ -1569,7 +1612,7 @@ function InnerGame({
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
               <button
-                onClick={() => { loadRoom(inv.roomId); dismissApartmentInvite(inv.fromId) }}
+                onClick={() => { safeLoadRoom(inv.roomId); dismissApartmentInvite(inv.fromId) }}
                 style={{
                   flex: 1, background: 'rgba(255,170,0,0.15)', border: '1px solid #ffaa00',
                   borderRadius: 6, color: '#ffaa00', fontSize: 10, fontFamily: 'monospace',
@@ -1589,7 +1632,7 @@ function InnerGame({
         ))}
 
         {/* Demandes de trade */}
-        {tradeRequests.map(req => (
+        {!config.guestLimited && tradeRequests.map(req => (
           <div key={req.tradeId} style={{
             background:    'rgba(10,10,20,0.95)',
             border:        '1px solid rgba(180,33,243,0.6)',
@@ -1620,7 +1663,7 @@ function InnerGame({
         ))}
 
         {/* Demandes d'amis */}
-        {friendRequests.map(req => (
+        {!config.guestLimited && friendRequests.map(req => (
           <div key={req.fromId} style={{
             background:    'rgba(10,10,20,0.95)',
             border:        '1px solid #00ff88',
@@ -1651,7 +1694,7 @@ function InnerGame({
         ))}
 
         {/* Toasts PM */}
-        {pmToasts.map(toast => (
+        {!config.guestLimited && pmToasts.map(toast => (
           <div
             key={toast.id}
             onClick={() => {
@@ -1697,7 +1740,7 @@ function InnerGame({
       </div>
 
       {/* Fenêtre de trade — centré plein écran */}
-      {activeTrade && (
+      {activeTrade && !config.guestLimited && (
         <TradeWindow
           trade={activeTrade}
           myBalance={neonCredits}
@@ -1709,7 +1752,7 @@ function InnerGame({
       )}
 
       {/* Inventaire */}
-      {showInventory && (
+      {showInventory && !config.guestLimited && (
         <InventoryPanel
           inventory={inventory}
           catalog={shopCatalog}
@@ -1718,10 +1761,10 @@ function InnerGame({
       )}
 
       <RoomTransitionOverlay transitioning={transitioning} />
-      <HUD connected={connected} roomName={activeRoom?.name ?? ''} playerCount={players.length} username={config.username} neonCredits={neonCredits} onOpenMarket={() => { openShop(); setShowMarket(true) }} onOpenInventory={() => setShowInventory(true)} isMobile={isLandscapeMobile} />
+      <HUD connected={connected} roomName={activeRoom?.name ?? ''} playerCount={players.length} username={config.username} neonCredits={neonCredits} onOpenMarket={() => { openShop(); setShowMarket(true) }} onOpenInventory={() => setShowInventory(true)} isMobile={isLandscapeMobile} guestLimited={config.guestLimited === true} />
 
       {/* Neon Market Shop */}
-      {showMarket && (
+      {showMarket && !config.guestLimited && (
         <NeonMarketShop
           catalog={shopCatalog}
           inventory={inventory}
@@ -1991,10 +2034,11 @@ function useMobileOrientation() {
 // HUD
 // ─────────────────────────────────────────
 
-function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket, onOpenInventory, isMobile }: {
+function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMarket, onOpenInventory, isMobile, guestLimited }: {
   connected: boolean; roomName: string; playerCount: number; username: string
   neonCredits: number; onOpenMarket: () => void; onOpenInventory: () => void
   isMobile?: boolean
+  guestLimited?: boolean
 }) {
   return (
     <div style={{
@@ -2018,32 +2062,38 @@ function HUD({ connected, roomName, playerCount, username, neonCredits, onOpenMa
         </div>
         <div>
           <div style={{ color: '#fff', fontWeight: 'bold', fontSize: 12 }}>{username}</div>
-          <div style={{ color: '#B421F3', fontSize: 9 }}>SeekerPunk OG</div>
+          <div style={{ color: '#B421F3', fontSize: 9 }}>{guestLimited ? 'Invité (limité)' : 'SeekerPunk OG'}</div>
         </div>
         <div style={{ marginLeft: 4, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 3 }}>
-          <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: 11 }}>₦ {neonCredits}</span>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <button
-              onClick={onOpenMarket}
-              style={{
-                background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
-                minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
-                fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >{isMobile ? '🛒' : '🛒 Market'}</button>
-            <button
-              onClick={onOpenInventory}
-              style={{
-                background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
-                borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
-                minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
-                fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}
-            >{isMobile ? '👜' : '🎒 Bag'}</button>
-          </div>
+          {!guestLimited && (
+            <>
+              <span style={{ color: '#FFD700', fontWeight: 'bold', fontSize: 11 }}>₦ {neonCredits}</span>
+              <div style={{ display: 'flex', gap: 4 }}>
+                <button
+                  type="button"
+                  onClick={onOpenMarket}
+                  style={{
+                    background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+                    borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
+                    minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
+                    fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >{isMobile ? '🛒' : '🛒 Market'}</button>
+                <button
+                  type="button"
+                  onClick={onOpenInventory}
+                  style={{
+                    background: 'rgba(180,33,243,0.15)', border: '1px solid rgba(180,33,243,0.4)',
+                    borderRadius: 5, color: '#B421F3', fontFamily: 'monospace', cursor: 'var(--punk-cursor-pointer)',
+                    minWidth: isMobile ? 44 : undefined, minHeight: isMobile ? 44 : undefined,
+                    fontSize: isMobile ? 20 : 9, padding: isMobile ? 0 : '2px 8px',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >{isMobile ? '👜' : '🎒 Bag'}</button>
+              </div>
+            </>
+          )}
         </div>
       </div>
       {/* Row 2 : room + player count — masqué en landscape mobile */}

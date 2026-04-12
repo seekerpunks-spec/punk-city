@@ -55,6 +55,8 @@ interface UseChatOptions {
   roomId:           string
   gridX?:           number
   gridY?:           number
+  /** Invité restreint (aligné sur la session serveur) */
+  guestLimited?:    boolean
   // Callback direct (bypass React state) pour les updates de position à 60fps
   onPlayerMoved?: (data: { id: string; gridX: number; gridY: number; pixiX: number; pixiY: number; direction: string }) => void
   /** Première inscription : erreur `player:join` (ex. pseudo déjà pris) → retour UI choix du pseudo */
@@ -702,15 +704,21 @@ interface SocialPanelProps {
   unreadPMs:       Map<string, number>
   onOpenPM:        (target: { id: string; username: string }) => void
   onMyApartment?:  () => void
+  /** Masque amis / DM / appart — invité restreint */
+  guestLimited?:   boolean
   style?:          React.CSSProperties
   compact?:        boolean
 }
 
 export function SocialPanel({
   players, myPlayerId, friends, pmConversations, unreadPMs, onOpenPM, onMyApartment,
-  onSelectPlayer, inMyApartment, onInviteToApartment, style, compact,
+  onSelectPlayer, inMyApartment, onInviteToApartment, guestLimited, style, compact,
 }: SocialPanelProps) {
   const [tab, setTab] = useState<'online' | 'friends' | 'messages'>('online')
+
+  useEffect(() => {
+    if (guestLimited) setTab('online')
+  }, [guestLimited])
 
   const totalUnread  = Array.from(unreadPMs.values()).reduce((a, b) => a + b, 0)
   const otherPlayers = players.filter(p => p.id !== myPlayerId)
@@ -728,11 +736,13 @@ export function SocialPanel({
     return friends.find(f => f.id === peerId)?.username ?? '???'
   }
 
-  const tabs = [
-    { id: 'online',   label: `Online`,   count: otherPlayers.length },
-    { id: 'friends',  label: `Friends`,  count: friends.length },
-    { id: 'messages', label: `DMs`,      count: null, badge: totalUnread },
-  ] as const
+  const tabs = guestLimited
+    ? [{ id: 'online' as const, label: 'Online', count: otherPlayers.length }]
+    : [
+        { id: 'online' as const,   label: 'Online',   count: otherPlayers.length },
+        { id: 'friends' as const,  label: 'Friends',  count: friends.length },
+        { id: 'messages' as const, label: 'DMs',      count: null as number | null, badge: totalUnread },
+      ]
 
   const btnBase = (active: boolean): React.CSSProperties => ({
     position:     'relative',
@@ -778,7 +788,7 @@ export function SocialPanel({
             <div style={{ fontSize: 9, color: tab === t.id ? 'rgba(180,33,243,0.7)' : '#444' }}>
               {'count' in t && t.count !== null ? t.count : ''}
             </div>
-            {'badge' in t && t.badge > 0 && (
+            {'badge' in t && typeof t.badge === 'number' && t.badge > 0 && (
               <span style={{
                 position: 'absolute', top: -5, right: -4,
                 background: '#ff3333', color: '#fff', borderRadius: '50%',
@@ -958,7 +968,7 @@ export function SocialPanel({
       </div>
 
       {/* Footer — My Apartment */}
-      {onMyApartment && (
+      {onMyApartment && !guestLimited && (
         <div style={{ padding: '6px 10px', borderTop: '1px solid rgba(97,0,151,0.3)' }}>
           <button
             onClick={onMyApartment}

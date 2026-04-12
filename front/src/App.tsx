@@ -13,7 +13,16 @@ import { verifySolanaSession } from './walletAuth'
 type AuthState =
   | { step: 'login' }
   | { step: 'choose_name'; sessionId: string }
-  | { step: 'play'; sessionId: string; username: string; registerUsername?: string }
+  | {
+      step:             'play'
+      sessionId:        string
+      username:         string
+      registerUsername?: string
+      /** Session invité sans wallet */
+      isGuest?:         boolean
+      /** Invité restreint (chat + déplacement seulement) */
+      guestLimited?:    boolean
+    }
 
 function LoginFlow({
   onReady,
@@ -30,6 +39,7 @@ function LoginFlow({
   const [pseudo, setPseudo] = useState('')
   const [err, setErr] = useState<string | null>(() => resumeChooseName?.message ?? null)
   const [loading, setLoading] = useState(false)
+  const [guestLoading, setGuestLoading] = useState(false)
   const api = getSocketServerUrl()
 
   const { publicKey, signMessage, connected, connecting, disconnect } = useWallet()
@@ -69,6 +79,30 @@ function LoginFlow({
       setErr(e instanceof Error ? e.message : 'Erreur connexion')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePlayAsGuest = async () => {
+    setErr(null)
+    setGuestLoading(true)
+    try {
+      const res = await fetch(`${api}/api/guest/session`, { method: 'POST' })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error((j as { error?: string }).error ?? `Erreur ${res.status}`)
+      }
+      const j = await res.json() as { sessionId: string; username: string; guestFeatureAccess: boolean }
+      onReady({
+        step:          'play',
+        sessionId:     j.sessionId,
+        username:      j.username,
+        isGuest:       true,
+        guestLimited:  !j.guestFeatureAccess,
+      })
+    } catch (e: unknown) {
+      setErr(e instanceof Error ? e.message : 'Impossible de créer une session invité')
+    } finally {
+      setGuestLoading(false)
     }
   }
 
@@ -172,6 +206,24 @@ function LoginFlow({
         </div>
         <div style={{ color: '#666', fontSize: 11, marginBottom: 32, letterSpacing: 2 }}>
           BY SEEKERPUNKS
+        </div>
+
+        <button
+          type="button"
+          disabled={guestLoading || loading}
+          onClick={() => void handlePlayAsGuest()}
+          style={{
+            width: '100%', background: 'rgba(180,33,243,0.08)', border: '1px solid rgba(180,33,243,0.45)',
+            borderRadius: 8, color: '#c77dff', padding: '10px', fontSize: 12,
+            cursor: guestLoading ? 'wait' : 'var(--punk-cursor-pointer)', fontFamily: 'monospace',
+            opacity: guestLoading ? 0.7 : 1,
+            marginBottom: 14,
+          }}
+        >
+          {guestLoading ? 'Connexion invité…' : 'Jouer en invité (sans wallet)'}
+        </button>
+        <div style={{ color: '#444', fontSize: 9, marginBottom: 16, lineHeight: 1.4 }}>
+          Pseudo auto <code style={{ color: '#666' }}>guest_1</code>, … — sans compte. Les droits dépendent du serveur (<code style={{ color: '#666' }}>guest_feature_access</code>).
         </div>
 
         {!connected ? (
@@ -280,6 +332,7 @@ export default function App() {
         avatar:           'default',
         roomId:           'genesis-plaza',
         onJoinFailed:     playAuth.registerUsername ? onJoinFailed : undefined,
+        guestLimited:     playAuth.guestLimited === true,
       }}
     />
   )
